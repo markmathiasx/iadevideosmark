@@ -24,7 +24,7 @@ if (Exists 'python') { $r += ('python: ' + (FirstLine 'python' @('--version'))) 
 if (Exists 'pip')    { $r += ('pip: ' + (FirstLine 'pip' @('--version'))) } else { $r += 'pip: MISSING' }
 
 $out = Join-Path $root '_requirements_report.md'
-$r -join \"
-\" | Set-Content -Encoding utf8 $out
+($r -join "`n") | Set-Content -Encoding utf8 $out
+
 Write-Host 'READY'
 Write-Host ('Report: ' + $out)
