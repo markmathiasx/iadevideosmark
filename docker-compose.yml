@@ -1,12 +1,9 @@
 services:
   api:
-    container_name: minhaia_api
     build: .
+    container_name: minhaia_api
     ports:
       - "8000:8000"
     volumes:
-      - ./outputs:/app/outputs
       - ./storage:/app/storage
-      - ./config:/app/config
-      - ./apps/web:/app/apps/web
     restart: unless-stopped

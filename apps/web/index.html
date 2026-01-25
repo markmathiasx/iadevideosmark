@@ -1,402 +1,240 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MinhaIALAST — Studio Local</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MinhaIALAST</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100">
-  <div class="max-w-6xl mx-auto p-6">
-    <div class="flex items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold">MinhaIALAST — Studio Local</h1>
-        <div class="text-sm text-zinc-400">API: <span id="apiUrl">http://127.0.0.1:8000</span></div>
-      </div>
-      <div class="flex gap-2">
-        <button id="tabGen" class="px-3 py-2 rounded-xl bg-white text-zinc-900 text-sm font-medium">Gerar</button>
-        <button id="tabEdit" class="px-3 py-2 rounded-xl bg-zinc-900/40 border border-zinc-800 text-sm">Editor</button>
-        <button id="tabLib" class="px-3 py-2 rounded-xl bg-zinc-900/40 border border-zinc-800 text-sm">Biblioteca</button>
-      </div>
+  <div class="max-w-5xl mx-auto p-4">
+    <div class="flex items-center justify-between gap-3">
+      <h1 class="text-xl font-semibold">MinhaIALAST</h1>
+      <div class="text-xs text-zinc-400"><span id="apiStatus">API: verificando...</span></div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-      <div class="lg:col-span-1 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
-        <h2 class="font-medium mb-3">Executor</h2>
-
-        <div id="paneGen">
-          <label class="block text-sm text-zinc-300">Pipeline (Gerar)</label>
-          <select id="modeGen" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
-
-          <label class="block text-sm text-zinc-300 mt-3">Prompt / Script</label>
-          <textarea id="prompt" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2 h-28"
-            placeholder="Ex.: 'Apresentador lendo notícia...'"></textarea>
-
-          <div class="grid grid-cols-3 gap-2 mt-3">
-            <div>
-              <label class="block text-xs text-zinc-400">Duração (s)</label>
-              <input id="duration" type="number" min="1" max="60" value="4"
-                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-            <div>
-              <label class="block text-xs text-zinc-400">FPS</label>
-              <input id="fps" type="number" min="12" max="60" value="24"
-                class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-            <div>
-              <label class="block text-xs text-zinc-400">Aspect</label>
-              <select id="aspect" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2">
-                <option value="16:9">16:9</option>
-                <option value="9:16">9:16</option>
-                <option value="1:1">1:1</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="mt-3">
-            <label class="block text-sm text-zinc-300">Upload (apenas Imagem → Vídeo)</label>
-            <input id="fileGen" type="file" class="w-full mt-1 text-sm text-zinc-300" />
-          </div>
-
-          <button id="runGen" class="mt-4 w-full bg-white text-zinc-900 rounded-xl py-2 font-medium">Executar</button>
+    <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium">Perfil</span>
+          <select id="profile" class="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm w-full"></select>
         </div>
 
-        <div id="paneEdit" class="hidden">
-          <label class="block text-sm text-zinc-300">Ferramenta (Editor)</label>
-          <select id="modeEdit" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
-
-          <div class="mt-3">
-            <label class="block text-sm text-zinc-300">Upload (vídeo/imagens/áudio/legenda)</label>
-            <input id="fileEdit" type="file" multiple class="w-full mt-1 text-sm text-zinc-300" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 mt-3">
-            <div>
-              <label class="block text-xs text-zinc-400">Start (s)</label>
-              <input id="trimStart" type="number" min="0" value="0" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-            <div>
-              <label class="block text-xs text-zinc-400">Duração (s)</label>
-              <input id="trimDur" type="number" min="1" value="10" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-          </div>
-
-          <label class="block text-sm text-zinc-300 mt-3">Texto (quando aplicável)</label>
-          <input id="overlayText" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2" placeholder="Ex.: Título do vídeo" />
-
-          <div class="grid grid-cols-2 gap-2 mt-3">
-            <div>
-              <label class="block text-xs text-zinc-400">Largura</label>
-              <input id="resizeW" type="number" min="160" value="1080" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-            <div>
-              <label class="block text-xs text-zinc-400">Altura</label>
-              <input id="resizeH" type="number" min="160" value="1920" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-            </div>
-          </div>
-
-
-          <div class="mt-3">
-            <label class="block text-xs text-zinc-400">Velocidade (ex: 1.25 = +25%, 0.8 = -20%)</label>
-            <input id="speedFactor" type="number" step="0.05" min="0.25" max="4" value="1.25"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
-          </div>
-
-          <button id="runEdit" class="mt-4 w-full bg-white text-zinc-900 rounded-xl py-2 font-medium">Executar</button>
-          <div class="mt-2 text-xs text-zinc-500">Concat/Slideshow: envie vários arquivos na ordem desejada.</div>
+        <div class="mt-3">
+          <label class="block text-xs text-zinc-400">Prompt / Texto</label>
+          <textarea id="prompt" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm" rows="4" placeholder="Ex: Teste de vídeo"></textarea>
         </div>
 
-        <div id="paneLib" class="hidden">
-          <div class="text-sm text-zinc-300">Importar assets com licença:</div>
-
-          <div class="mt-3 grid grid-cols-2 gap-2">
-            <input id="cdcPid" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm" placeholder="CDC PHIL pid (ex: 17418)" />
-            <button id="importCdc" class="bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Importar</button>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400">Aspect</label>
+            <select id="aspect" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm">
+              <option value="16:9">16:9</option>
+              <option value="9:16">9:16</option>
+              <option value="1:1">1:1</option>
+            </select>
           </div>
-
-          <div class="mt-3 grid grid-cols-2 gap-2">
-            <input id="commonsCat" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm" placeholder="Commons Category (ex: Medical_photography)" />
-            <button id="importCommons" class="bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Importar</button>
+          <div>
+            <label class="block text-xs text-zinc-400">FPS</label>
+            <input id="fps" type="number" min="1" max="60" value="24" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm"/>
           </div>
-
-          <div class="mt-3">
-            <button id="refreshAssets" class="bg-white text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium w-full">Atualizar lista</button>
-          </div>
-
-          <div id="assetsList" class="mt-3 space-y-2 max-h-72 overflow-auto"></div>
         </div>
 
-        <div id="msg" class="mt-3 text-sm text-zinc-300"></div>
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400">Duração (s)</label>
+            <input id="duration" type="number" min="1" max="60" value="3" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400">Speed (somente modo Speed)</label>
+            <input id="speed" type="number" step="0.05" min="0.25" max="4" value="1.25" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm"/>
+          </div>
+        </div>
+
+        <div class="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400">Upload (vídeo/imagem/áudio/srt)</label>
+            <input id="upload" type="file" class="w-full text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400">Inputs (paths do upload)</label>
+            <input id="inputs" type="text" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm" placeholder="Ex: storage/uploads/abc.mp4, storage/uploads/def.mp3"/>
+          </div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button id="run" class="bg-white text-black px-4 py-2 rounded-xl text-sm font-medium">Rodar</button>
+          <button id="refreshJobs" class="bg-zinc-800 px-4 py-2 rounded-xl text-sm">Atualizar Jobs</button>
+        </div>
+
+        <div class="mt-4 text-xs text-zinc-400" id="msg"></div>
       </div>
 
-      <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
-        <h2 class="font-medium mb-3">Resultado</h2>
-        <div id="preview" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 min-h-[320px] flex items-center justify-center text-zinc-500">
-          Nenhum job ainda.
+      <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-medium">Jobs</div>
+          <a class="text-xs underline text-zinc-300" href="/docs" target="_blank">API Docs</a>
         </div>
+        <div id="jobs" class="mt-3 space-y-3 text-sm"></div>
 
-        <div class="mt-4">
-          <h3 class="font-medium mb-2">Histórico</h3>
-          <div id="history" class="space-y-2"></div>
-        </div>
-
-        <div class="mt-4">
-          <h3 class="font-medium mb-2">Comparar (A/B)</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <select id="jobA" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
-            <select id="jobB" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
+        <div class="mt-6 border-t border-zinc-800 pt-4">
+          <div class="text-sm font-medium">Assets</div>
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <input id="cdcPid" type="number" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm" placeholder="PHIL pid (ex 17418)"/>
+            <button id="importCdc" class="bg-zinc-800 px-3 py-2 rounded-xl text-sm">Importar CDC</button>
           </div>
-          <button id="cmpBtn" class="mt-2 bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Comparar</button>
-          <pre id="cmpOut" class="mt-2 text-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-3 overflow-auto"></pre>
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <input id="commonsCat" type="text" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-sm" placeholder="Commons categoria"/>
+            <button id="importCommons" class="bg-zinc-800 px-3 py-2 rounded-xl text-sm">Importar Commons</button>
+          </div>
+          <button id="refreshAssets" class="mt-2 bg-zinc-800 px-3 py-2 rounded-xl text-sm w-full">Listar Assets</button>
+          <div id="assets" class="mt-3 space-y-2 text-xs text-zinc-300"></div>
         </div>
       </div>
     </div>
   </div>
 
 <script>
-const API = "http://127.0.0.1:8000";
-document.getElementById("apiUrl").textContent = API;
-const msg = (t) => document.getElementById("msg").textContent = t;
+const el = (id) => document.getElementById(id);
 
-async function api(path, opt) {
-  const r = await fetch(API + path, opt);
-  const j = await r.json().catch(()=>null);
-  if (!r.ok) throw new Error((j && (j.detail || j.error)) || ("HTTP " + r.status));
-  return j;
+async function apiCheck(){
+  try{
+    const r = await fetch("/health");
+    const j = await r.json();
+    el("apiStatus").textContent = "API: OK (" + j.time + ")";
+  }catch(e){
+    el("apiStatus").textContent = "API: OFF (ver scripts\\logs.cmd)";
+  }
 }
 
-async function uploadFiles(files) {
+function flattenProfiles(p){
   const out = [];
-  for (const f of files) {
-    const fd = new FormData();
-    fd.append("file", f);
-    const r = await fetch(API + "/uploads", { method:"POST", body: fd });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.detail || "Upload failed");
-    out.push(j.path);
+  for(const g of (p.groups||[])){
+    for(const pr of (g.profiles||[])){
+      out.push({group:g.name, ...pr});
+    }
   }
   return out;
 }
 
-async function refreshHistory() {
-  const h = await api("/jobs");
-  const items = h.items || [];
-  const host = document.getElementById("history");
-  host.innerHTML = "";
-  const jobA = document.getElementById("jobA");
-  const jobB = document.getElementById("jobB");
-  jobA.innerHTML = ""; jobB.innerHTML = "";
+async function loadProfiles(){
+  const r = await fetch("/config/profiles.json");
+  const j = await r.json();
+  const list = flattenProfiles(j);
+  const sel = el("profile");
+  sel.innerHTML = "";
+  for(const p of list){
+    const opt = document.createElement("option");
+    opt.value = p.modes[0];
+    opt.textContent = p.group + " — " + p.name + " (" + p.modes[0] + ")";
+    sel.appendChild(opt);
+  }
+}
 
-  items.forEach(it => {
-    const row = document.createElement("div");
-    row.className = "border border-zinc-800 rounded-xl p-2 flex items-center justify-between";
-    row.innerHTML = `<div>
-        <div class="text-sm">${it.id} <span class="text-zinc-400">(${it.status})</span></div>
-        <div class="text-xs text-zinc-500">${it.mode} · ${it.created_at}</div>
+async function uploadFile(){
+  const f = el("upload").files[0];
+  if(!f) return null;
+  const fd = new FormData();
+  fd.append("file", f);
+  const r = await fetch("/upload", {method:"POST", body: fd});
+  if(!r.ok) throw new Error(await r.text());
+  return await r.json();
+}
+
+async function refreshJobs(){
+  const r = await fetch("/jobs?limit=20");
+  const j = await r.json();
+  const root = el("jobs");
+  root.innerHTML = "";
+  for(const item of (j.items||[])){
+    const div = document.createElement("div");
+    div.className = "border border-zinc-800 rounded-xl p-3 bg-zinc-950/40";
+    const out = item.outputs && item.outputs.final ? `<a class="underline" href="${item.outputs.final}" target="_blank">Baixar final.mp4</a>` : "";
+    const err = item.error ? `<div class="mt-2 text-red-300 text-xs">${item.error}</div>` : "";
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-zinc-400">${item.id}</div>
+        <div class="text-xs">${item.status}</div>
       </div>
-      <button class="text-xs bg-white text-zinc-900 rounded-lg px-2 py-1">Abrir</button>`;
-    row.querySelector("button").onclick = () => openJob(it.id);
-    host.appendChild(row);
-
-    const optA = document.createElement("option"); optA.value = it.id; optA.textContent = it.id;
-    const optB = document.createElement("option"); optB.value = it.id; optB.textContent = it.id;
-    jobA.appendChild(optA); jobB.appendChild(optB);
-  });
-}
-
-async function openJob(id) {
-  const j = await api("/jobs/" + id);
-  const prev = document.getElementById("preview");
-  prev.innerHTML = "";
-  if (j.outputs_json && j.outputs_json.final) {
-    const url = API + j.outputs_json.final;
-    if (url.endsWith(".mp4")) {
-      const v = document.createElement("video");
-      v.src = url; v.controls = true; v.className="w-full rounded-xl";
-      prev.appendChild(v);
-    } else {
-      const im = document.createElement("img");
-      im.src = url; im.className="max-w-full rounded-xl";
-      prev.appendChild(im);
-    }
-  } else {
-    prev.textContent = (j.status === "failed") ? ("Falhou: " + (j.error || "")) : "Sem output ainda.";
+      <div class="mt-1 text-xs text-zinc-300">${out}</div>
+      ${err}
+    `;
+    root.appendChild(div);
   }
 }
 
-async function runJob(body) {
-  const created = await api("/jobs", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(body)
-  });
-  msg("Job criado: " + created.id);
+async function runJob(){
+  el("msg").textContent = "";
+  let uploaded = null;
+  try{ uploaded = await uploadFile(); } catch(e) {}
+  const mode = el("profile").value;
+  let inputs = (el("inputs").value||"").split(",").map(s=>s.trim()).filter(Boolean);
+  if(uploaded && uploaded.path && inputs.length === 0) inputs = [uploaded.path];
 
-  const id = created.id;
-  for (let i=0;i<180;i++){
-    const j = await api("/jobs/" + id);
-    if (j.status === "succeeded" || j.status === "failed") {
-      await refreshHistory();
-      await openJob(id);
-      msg("Finalizado: " + j.status);
-      return;
+  const body = {
+    profile_id: mode,
+    mode: mode,
+    prompt_or_script: el("prompt").value||"",
+    inputs: inputs,
+    params: {
+      duration: parseFloat(el("duration").value||"3"),
+      fps: parseInt(el("fps").value||"24",10),
+      aspect: el("aspect").value,
+      speed: parseFloat(el("speed").value||"1.25"),
     }
-    await new Promise(r=>setTimeout(r, 1000));
-  }
-  msg("Job ainda executando (timeout do polling).");
-}
-
-function setTab(tab) {
-  const btns = {gen: tabGen, edit: tabEdit, lib: tabLib};
-  Object.values(btns).forEach(b => b.className = "px-3 py-2 rounded-xl bg-zinc-900/40 border border-zinc-800 text-sm");
-  btns[tab].className = "px-3 py-2 rounded-xl bg-white text-zinc-900 text-sm font-medium";
-
-  paneGen.classList.toggle("hidden", tab !== "gen");
-  paneEdit.classList.toggle("hidden", tab !== "edit");
-  paneLib.classList.toggle("hidden", tab !== "lib");
-}
-tabGen.onclick = () => setTab("gen");
-tabEdit.onclick = () => setTab("edit");
-tabLib.onclick = () => setTab("lib");
-
-async function loadProfiles() {
-  const p = await api("/profiles");
-  const groups = p.groups || [];
-  const genModes = ["mock_text_to_video","mock_image_to_video","mock_text_to_image"];
-  const editModes = ["ffmpeg_trim","ffmpeg_resize","ffmpeg_overlay_text","ffmpeg_add_music","ffmpeg_burn_srt","ffmpeg_concat","ffmpeg_slideshow","ffmpeg_speed"];
-
-  const selGen = document.getElementById("modeGen");
-  const selEdit = document.getElementById("modeEdit");
-  selGen.innerHTML = ""; selEdit.innerHTML = "";
-
-  const addOpt = (sel, value, label) => {
-    const o = document.createElement("option");
-    o.value = value; o.textContent = label || value;
-    sel.appendChild(o);
   };
-
-  groups.forEach(g => (g.profiles||[]).forEach(pr => (pr.modes||[]).forEach(m => {
-    if (genModes.includes(m)) addOpt(selGen, m, pr.name);
-    if (editModes.includes(m)) addOpt(selEdit, m, pr.name);
-  })));
-
-  if (!selGen.options.length) addOpt(selGen, "mock_text_to_video", "Texto → Vídeo (MOCK)");
-  if (!selEdit.options.length) addOpt(selEdit, "ffmpeg_trim", "Cortar (Trim)");
+  const r = await fetch("/jobs", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+  const j = await r.json();
+  el("msg").textContent = "Job criado: " + j.id + " (aguarde alguns segundos e clique Atualizar Jobs)";
+  await new Promise(res => setTimeout(res, 1200));
+  await refreshJobs();
 }
 
-runGen.onclick = async () => {
-  try {
-    msg("");
-    const mode = document.getElementById("modeGen").value;
-    const prompt = document.getElementById("prompt").value || "";
-    const duration = parseInt(document.getElementById("duration").value || "4", 10);
-    const fps = parseInt(document.getElementById("fps").value || "24", 10);
-    const aspect = document.getElementById("aspect").value;
-
-    let inputs = [];
-    if (mode === "mock_image_to_video") {
-      const f = document.getElementById("fileGen").files[0];
-      if (!f) throw new Error("Envie 1 imagem para Imagem → Vídeo.");
-      inputs = await uploadFiles([f]);
-    }
-
-    await runJob({
-      profile_id: mode,
-      mode,
-      prompt_or_script: prompt,
-      inputs,
-      params: { duration, fps, aspect },
-      content_sensitive: false,
-      consent: false
-    });
-  } catch (e) { msg("ERRO: " + e.message); }
-};
-
-runEdit.onclick = async () => {
-  try {
-    msg("");
-    const mode = document.getElementById("modeEdit").value;
-    const files = Array.from(document.getElementById("fileEdit").files || []);
-    if (!files.length) throw new Error("Envie arquivo(s) para editar.");
-
-    const inputs = await uploadFiles(files);
-
-    const body = {
-      profile_id: mode,
-      mode,
-      prompt_or_script: document.getElementById("overlayText").value || "",
-      inputs,
-      params: {
-        start_s: parseFloat(document.getElementById("trimStart").value || "0"),
-        duration_s: parseFloat(document.getElementById("trimDur").value || "10"),
-        width: parseInt(document.getElementById("resizeW").value || "1080", 10),
-        height: parseInt(document.getElementById("resizeH").value || "1920", 10)
-      },
-      content_sensitive: false,
-      consent: false
-    };
-
-    await runJob(body);
-  } catch (e) { msg("ERRO: " + e.message); }
-};
-
-cmpBtn.onclick = async () => {
-  try {
-    const a = jobA.value;
-    const b = jobB.value;
-    const out = await api("/jobs/compare", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({a_job_id:a, b_job_id:b})
-    });
-    cmpOut.textContent = JSON.stringify(out, null, 2);
-  } catch (e) { cmpOut.textContent = "ERRO: " + e.message; }
-};
-
-async function refreshAssetsUI() {
-  const host = document.getElementById("assetsList");
-  host.innerHTML = "";
-  const j = await api("/assets");
-  (j.items || []).slice(0, 50).forEach(a => {
-    const row = document.createElement("div");
-    row.className = "border border-zinc-800 rounded-xl p-2 text-xs";
-    const link = API + "/assets/file/" + a.id;
-    row.innerHTML = `<div class="text-sm">${(a.title||a.id)}</div>
-      <div class="text-zinc-500">${a.source} · ${a.license || ""}</div>
-      <div class="mt-1"><a class="underline" href="${link}" target="_blank">Abrir arquivo</a></div>`;
-    host.appendChild(row);
-  });
+async function refreshAssets(){
+  const r = await fetch("/assets?limit=50");
+  const j = await r.json();
+  const root = el("assets");
+  root.innerHTML = "";
+  for(const a of (j.items||[])){
+    const url = `/assets/file/${a.id}`;
+    const div = document.createElement("div");
+    div.className = "border border-zinc-800 rounded-xl p-2 bg-zinc-950/40";
+    div.innerHTML = `
+      <div class="text-xs font-medium">${a.title || a.source_id}</div>
+      <div class="opacity-80">${a.license || ""}</div>
+      <a class="underline" href="${url}" target="_blank">Abrir arquivo</a>
+    `;
+    root.appendChild(div);
+  }
 }
 
-importCdc.onclick = async () => {
-  try {
-    const pid = parseInt(cdcPid.value||"", 10);
-    if (!pid) throw new Error("Informe um PID válido.");
-    await api("/assets/import/cdc_phil", {method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({pid})});
-    await refreshAssetsUI();
-    msg("Importado CDC pid=" + pid);
-  } catch (e) { msg("ERRO: " + e.message); }
-};
+async function importCdc(){
+  const pid = parseInt(el("cdcPid").value||"0",10);
+  if(!pid) return;
+  const r = await fetch("/assets/import/cdc_phil", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({pid})});
+  if(!r.ok){ el("msg").textContent = await r.text(); return; }
+  el("msg").textContent = "Importado CDC pid=" + pid;
+  await refreshAssets();
+}
 
-importCommons.onclick = async () => {
-  try {
-    const category = (commonsCat.value||"").trim();
-    if (!category) throw new Error("Informe uma categoria.");
-    await api("/assets/import/commons_category", {method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({category, limit: 30})});
-    await refreshAssetsUI();
-    msg("Importado Commons: " + category);
-  } catch (e) { msg("ERRO: " + e.message); }
-};
+async function importCommons(){
+  const category = (el("commonsCat").value||"").trim();
+  if(!category) return;
+  const r = await fetch("/assets/import/commons_category", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({category, limit: 20})});
+  if(!r.ok){ el("msg").textContent = await r.text(); return; }
+  const j = await r.json();
+  el("msg").textContent = "Importados: " + j.imported + " (" + j.category + ")";
+  await refreshAssets();
+}
 
-refreshAssets.onclick = async () => {
-  try { await refreshAssetsUI(); msg("Lista atualizada."); } catch(e) { msg("ERRO: " + e.message); }
-};
+el("run").addEventListener("click", runJob);
+el("refreshJobs").addEventListener("click", refreshJobs);
+el("refreshAssets").addEventListener("click", refreshAssets);
+el("importCdc").addEventListener("click", importCdc);
+el("importCommons").addEventListener("click", importCommons);
 
-(async () => {
-  await loadProfiles().catch(()=>{});
-  await refreshHistory().catch(()=>{});
-  await refreshAssetsUI().catch(()=>{});
-})();
+apiCheck();
+loadProfiles().then(refreshJobs);
 </script>
 </body>
 </html>

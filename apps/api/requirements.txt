@@ -1,6 +1,6 @@
-fastapi
-uvicorn[standard]
-pydantic
-python-multipart
-aiofiles
-pillow
+fastapi>=0.110
+uvicorn[standard]>=0.24
+pydantic>=2.5
+python-multipart>=0.0.7
+aiofiles>=23.2.1
+pillow>=10.3.0

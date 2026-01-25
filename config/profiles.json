@@ -1,12 +1,12 @@
 {
   "groups": [
     {
-      "id": "video_gen",
-      "name": "Geração (MOCK)",
+      "id": "generate",
+      "name": "Gerar (offline mock)",
       "profiles": [
         {
           "id": "mock_text_to_video",
-          "name": "Texto → Vídeo (MOCK)",
+          "name": "MOCK Texto → Vídeo",
           "badges": [
             "offline"
           ],
@@ -16,29 +16,39 @@
         },
         {
           "id": "mock_image_to_video",
-          "name": "Imagem → Vídeo (MOCK)",
+          "name": "MOCK Imagem → Vídeo (slideshow)",
           "badges": [
             "offline"
           ],
           "modes": [
-            "mock_image_to_video"
+            "ffmpeg_slideshow"
           ]
         },
         {
-          "id": "mock_text_to_image",
-          "name": "Texto → Imagem (MOCK)",
+          "id": "mock_script_to_video",
+          "name": "MOCK Roteiro → Vídeo",
           "badges": [
             "offline"
           ],
           "modes": [
-            "mock_text_to_image"
+            "mock_text_to_video"
+          ]
+        },
+        {
+          "id": "mock_voiceover",
+          "name": "MOCK Narração (placeholder)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_voiceover"
           ]
         }
       ]
     },
     {
-      "id": "video_tools",
-      "name": "Editor (FFmpeg)",
+      "id": "edit",
+      "name": "Editar (FFmpeg)",
       "profiles": [
         {
           "id": "ff_trim",
@@ -52,7 +62,7 @@
         },
         {
           "id": "ff_resize",
-          "name": "Redimensionar/Aspect",
+          "name": "Redimensionar",
           "badges": [
             "offline"
           ],
@@ -61,8 +71,8 @@
           ]
         },
         {
-          "id": "ff_text",
-          "name": "Texto na tela",
+          "id": "ff_overlay_text",
+          "name": "Texto na Tela",
           "badges": [
             "offline"
           ],
@@ -71,8 +81,8 @@
           ]
         },
         {
-          "id": "ff_music",
-          "name": "Adicionar música",
+          "id": "ff_add_music",
+          "name": "Adicionar Música",
           "badges": [
             "offline"
           ],
@@ -81,8 +91,8 @@
           ]
         },
         {
-          "id": "ff_caption",
-          "name": "Queimar legenda (SRT)",
+          "id": "ff_burn_srt",
+          "name": "Queimar Legenda (SRT)",
           "badges": [
             "offline"
           ],
@@ -92,22 +102,12 @@
         },
         {
           "id": "ff_concat",
-          "name": "Juntar vídeos (Concat)",
+          "name": "Juntar Vídeos (Concat)",
           "badges": [
             "offline"
           ],
           "modes": [
             "ffmpeg_concat"
-          ]
-        },
-        {
-          "id": "ff_slideshow",
-          "name": "Slideshow de imagens",
-          "badges": [
-            "offline"
-          ],
-          "modes": [
-            "ffmpeg_slideshow"
           ]
         },
         {
@@ -123,12 +123,12 @@
       ]
     },
     {
-      "id": "library",
-      "name": "Biblioteca",
+      "id": "assets",
+      "name": "Biblioteca (Licenças)",
       "profiles": [
         {
           "id": "assets_import",
-          "name": "Importar Assets (CDC/Commons)",
+          "name": "Importar (CDC PHIL / Commons)",
           "badges": [
             "licensed"
           ],
