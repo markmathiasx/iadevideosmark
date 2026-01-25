@@ -3,28 +3,39 @@ Set-Location $root
 
 function Exists($cmd) { return [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 
+function OneLine($cmd, $args) {
+  try {
+    $out = & $cmd @args 2>&1 | Out-String
+    $out = ($out -split "`r?`n" | Where-Object { $_ -and $_.Trim() -ne "" } | Select-Object -First 1)
+    if (-not $out) { return "N/A" }
+    return $out.Trim()
+  } catch {
+    return "N/A"
+  }
+}
+
 $r = @()
 $r += "# Requirements Report"
 $r += ""
 $r += "Root: $root"
-$r += "Date: 2026-01-25T02:38:31"
+$r += "Date: $(Get-Date -Format s)"
 $r += ""
 $r += "## Versions"
 
-$r += "git: " + ( (Exists git) ? (git --version) : "MISSING" )
-$r += "python: " + ( (Exists python) ? (python --version) : "MISSING" )
-$r += "pip: " + ( (Exists pip) ? (pip --version) : "MISSING" )
-$r += "node: " + ( (Exists node) ? (node --version) : "optional" )
-$r += "npm: " + ( (Exists npm) ? (npm --version) : "optional" )
-$r += "docker: " + ( (Exists docker) ? (docker --version) : "optional" )
-$r += "ffmpeg: " + ( (Exists ffmpeg) ? ((ffmpeg -version | Select-Object -First 1) -join '') : "MISSING" )
-$r += "ffprobe: " + ( (Exists ffprobe) ? ((ffprobe -version | Select-Object -First 1) -join '') : "MISSING" )
+$r += "git: "    + ($(if (Exists git)    { OneLine git @("--version") } else { "MISSING" }))
+$r += "python: " + ($(if (Exists python) { OneLine python @("--version") } else { "MISSING" }))
+$r += "pip: "    + ($(if (Exists pip)    { OneLine pip @("--version") } else { "MISSING" }))
+$r += "node: "   + ($(if (Exists node)   { OneLine node @("--version") } else { "optional" }))
+$r += "npm: "    + ($(if (Exists npm)    { OneLine npm @("--version") } else { "optional" }))
+$r += "docker: " + ($(if (Exists docker) { OneLine docker @("--version") } else { "optional" }))
+$r += "ffmpeg: " + ($(if (Exists ffmpeg) { OneLine ffmpeg @("-version") } else { "MISSING" }))
+$r += "ffprobe: "+ ($(if (Exists ffprobe){ OneLine ffprobe @("-version") } else { "MISSING" }))
 
 $r += ""
 $r += "## Paths"
-$r += "where.exe python: " + ( & where.exe python 2>$null | Select-Object -First 1 )
-$r += "where.exe ffmpeg: " + ( & where.exe ffmpeg 2>$null | Select-Object -First 1 )
-$r += "where.exe ffprobe: " + ( & where.exe ffprobe 2>$null | Select-Object -First 1 )
+try { $r += "where.exe python: " + ((& where.exe python 2>$null | Select-Object -First 1) -as [string]) } catch { $r += "where.exe python: N/A" }
+try { $r += "where.exe ffmpeg: " + ((& where.exe ffmpeg 2>$null | Select-Object -First 1) -as [string]) } catch { $r += "where.exe ffmpeg: N/A" }
+try { $r += "where.exe ffprobe: " + ((& where.exe ffprobe 2>$null | Select-Object -First 1) -as [string]) } catch { $r += "where.exe ffprobe: N/A" }
 
 $r += ""
 $r += "## Disk Free (bytes)"
@@ -36,15 +47,14 @@ try {
 } catch {}
 
 $missing = @()
-if (-not (Exists git)) { $missing += "git" }
+if (-not (Exists git))    { $missing += "git" }
 if (-not (Exists python)) { $missing += "python" }
-if (-not (Exists pip)) { $missing += "pip" }
+if (-not (Exists pip))    { $missing += "pip" }
 if (-not (Exists ffmpeg)) { $missing += "ffmpeg" }
-if (-not (Exists ffprobe)) { $missing += "ffprobe" }
+if (-not (Exists ffprobe)){ $missing += "ffprobe" }
 
 $out = Join-Path $root "_requirements_report.md"
-$r -join "
-" | Out-File -Encoding utf8 $out
+$r -join "`n" | Out-File -Encoding utf8 $out
 
 if ($missing.Count -eq 0) { Write-Host "READY" } else { Write-Host ("MISSING: " + ($missing -join ", ")) }
 Write-Host "Report: $out"
