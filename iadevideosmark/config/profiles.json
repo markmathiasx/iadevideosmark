@@ -1,0 +1,142 @@
+{
+  "groups": [
+    {
+      "id": "generate",
+      "name": "Gerar (offline mock)",
+      "profiles": [
+        {
+          "id": "mock_text_to_video",
+          "name": "MOCK Texto → Vídeo",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_text_to_video"
+          ]
+        },
+        {
+          "id": "mock_image_to_video",
+          "name": "MOCK Imagem → Vídeo (slideshow)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_slideshow"
+          ]
+        },
+        {
+          "id": "mock_script_to_video",
+          "name": "MOCK Roteiro → Vídeo",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_text_to_video"
+          ]
+        },
+        {
+          "id": "mock_voiceover",
+          "name": "MOCK Narração (placeholder)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_voiceover"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "name": "Editar (FFmpeg)",
+      "profiles": [
+        {
+          "id": "ff_trim",
+          "name": "Cortar (Trim)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_trim"
+          ]
+        },
+        {
+          "id": "ff_resize",
+          "name": "Redimensionar",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_resize"
+          ]
+        },
+        {
+          "id": "ff_overlay_text",
+          "name": "Texto na Tela",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_overlay_text"
+          ]
+        },
+        {
+          "id": "ff_add_music",
+          "name": "Adicionar Música",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_add_music"
+          ]
+        },
+        {
+          "id": "ff_burn_srt",
+          "name": "Queimar Legenda (SRT)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_burn_srt"
+          ]
+        },
+        {
+          "id": "ff_concat",
+          "name": "Juntar Vídeos (Concat)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_concat"
+          ]
+        },
+        {
+          "id": "ff_speed",
+          "name": "Velocidade (Speed)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_speed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "name": "Biblioteca (Licenças)",
+      "profiles": [
+        {
+          "id": "assets_import",
+          "name": "Importar (CDC PHIL / Commons)",
+          "badges": [
+            "licensed"
+          ],
+          "modes": [
+            "assets_import"
+          ]
+        }
+      ]
+    }
+  ]
+}

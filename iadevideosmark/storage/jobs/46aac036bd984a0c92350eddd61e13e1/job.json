@@ -1,0 +1,27 @@
+{
+  "profile_id": "mock_text_to_video",
+  "mode": "mock_text_to_video",
+  "prompt_or_script": "teste ",
+  "inputs": [],
+  "params": {
+    "duration": 3,
+    "fps": 60,
+    "aspect": "16:9",
+    "speed": 1.25
+  },
+  "id": "46aac036bd984a0c92350eddd61e13e1",
+  "status": "succeeded",
+  "progress": 1.0,
+  "created_at": "2026-01-25T14:02:27",
+  "updated_at": "2026-01-25T14:02:29",
+  "outputs": {
+    "final": "/files/46aac036bd984a0c92350eddd61e13e1/final.mp4"
+  },
+  "metrics": {
+    "duration_s": 3.0,
+    "width": 1280,
+    "height": 720,
+    "r_frame_rate": "60/1",
+    "avg_frame_rate": "60/1"
+  }
+}

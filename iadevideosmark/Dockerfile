@@ -23,7 +23,7 @@ RUN pip install -r /app/apps/api/requirements.txt
 # App code
 COPY apps /app/apps
 COPY config /app/config
-RUN mkdir -p /app/outputs
+COPY outputs /app/outputs
 COPY scripts /app/scripts
 COPY docker-compose.yml /app/docker-compose.yml
 COPY Dockerfile /app/Dockerfile
