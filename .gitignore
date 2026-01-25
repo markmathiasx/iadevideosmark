@@ -1,0 +1,11 @@
+﻿node_modules/
+.vscode/
+.env
+*.db
+__pycache__/
+*.pyc
+apps/api/.venv/
+apps/web/dist/
+outputs/
+storage/
+tools/

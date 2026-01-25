@@ -1,0 +1,242 @@
+﻿<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Studio Local (MVP)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-100">
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-semibold">AI Studio Local (MVP)</h1>
+      <div class="text-sm text-zinc-400">Backend: <span id="apiUrl">http://127.0.0.1:8000</span></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+      <div class="lg:col-span-1 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <h2 class="font-medium mb-3">Configuração</h2>
+
+        <label class="block text-sm text-zinc-300">Pipeline</label>
+        <select id="mode" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2">
+          <option value="mock_text_to_video">MOCK Texto  Vídeo</option>
+          <option value="mock_text_to_image">MOCK Texto  Imagem</option>
+          <option value="mock_image_to_video">MOCK Imagem  Vídeo</option>
+        </select>
+
+        <label class="block text-sm text-zinc-300 mt-3">Prompt / Script</label>
+        <textarea id="prompt" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2 h-28"
+          placeholder="Ex.: 'Apresentador lendo notícia...'"></textarea>
+
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          <div>
+            <label class="block text-xs text-zinc-400">Duração (s)</label>
+            <input id="duration" type="number" min="2" max="10" value="4"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400">FPS</label>
+            <input id="fps" type="number" min="12" max="30" value="24"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400">Aspect</label>
+            <select id="aspect" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2">
+              <option value="16:9">16:9</option>
+              <option value="9:16">9:16</option>
+              <option value="1:1">1:1</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-2">
+          <input id="sensitive" type="checkbox" class="accent-white" />
+          <label for="sensitive" class="text-sm text-zinc-300">Filtro sensível (ativar)</label>
+        </div>
+
+        <div id="consentWrap" class="mt-2 hidden">
+          <div class="flex items-center gap-2">
+            <input id="consent" type="checkbox" class="accent-white" />
+            <label for="consent" class="text-sm text-zinc-300">Confirmo consentimento e responsabilidade</label>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="block text-sm text-zinc-300">Upload (somente para Imagem  Vídeo)</label>
+          <input id="file" type="file" class="w-full mt-1 text-sm text-zinc-300" />
+        </div>
+
+        <button id="runBtn" class="mt-4 w-full bg-white text-zinc-900 rounded-xl py-2 font-medium">
+          Gerar
+        </button>
+
+        <div id="msg" class="mt-3 text-sm text-zinc-300"></div>
+      </div>
+
+      <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <h2 class="font-medium mb-3">Resultado</h2>
+
+        <div id="preview" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 min-h-[320px] flex items-center justify-center text-zinc-500">
+          Nenhum job ainda.
+        </div>
+
+        <div class="mt-4">
+          <h3 class="font-medium mb-2">Histórico</h3>
+          <div id="history" class="space-y-2"></div>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="font-medium mb-2">Comparar (A/B)</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <select id="jobA" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
+            <select id="jobB" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
+          </div>
+          <button id="cmpBtn" class="mt-2 bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Comparar</button>
+          <pre id="cmpOut" class="mt-2 text-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-3 overflow-auto"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+document.getElementById("apiUrl").textContent = API;
+
+const msg = (t) => document.getElementById("msg").textContent = t;
+
+const sensitive = document.getElementById("sensitive");
+const consentWrap = document.getElementById("consentWrap");
+sensitive.addEventListener("change", () => {
+  consentWrap.classList.toggle("hidden", !sensitive.checked);
+});
+
+async function api(path, opt) {
+  const r = await fetch(API + path, opt);
+  const j = await r.json().catch(()=>null);
+  if (!r.ok) throw new Error((j && (j.detail || j.error)) || ("HTTP " + r.status));
+  return j;
+}
+
+async function refreshHistory() {
+  const h = await api("/jobs");
+  const items = h.items || [];
+  const host = document.getElementById("history");
+  host.innerHTML = "";
+  const jobA = document.getElementById("jobA");
+  const jobB = document.getElementById("jobB");
+  jobA.innerHTML = ""; jobB.innerHTML = "";
+  items.forEach(it => {
+    const row = document.createElement("div");
+    row.className = "border border-zinc-800 rounded-xl p-2 flex items-center justify-between";
+    row.innerHTML = `<div>
+        <div class="text-sm">${it.id} <span class="text-zinc-400">(${it.status})</span></div>
+        <div class="text-xs text-zinc-500">${it.mode}  ${it.created_at}</div>
+      </div>
+      <button class="text-xs bg-white text-zinc-900 rounded-lg px-2 py-1">Abrir</button>`;
+    row.querySelector("button").onclick = () => openJob(it.id);
+    host.appendChild(row);
+
+    const optA = document.createElement("option"); optA.value = it.id; optA.textContent = it.id;
+    const optB = document.createElement("option"); optB.value = it.id; optB.textContent = it.id;
+    jobA.appendChild(optA); jobB.appendChild(optB);
+  });
+}
+
+async function openJob(id) {
+  const j = await api("/jobs/" + id);
+  const prev = document.getElementById("preview");
+  prev.innerHTML = "";
+  if (j.outputs_json && j.outputs_json.final) {
+    const url = API + j.outputs_json.final;
+    if (url.endsWith(".mp4")) {
+      const v = document.createElement("video");
+      v.src = url; v.controls = true; v.className="w-full rounded-xl";
+      prev.appendChild(v);
+    } else {
+      const im = document.createElement("img");
+      im.src = url; im.className="max-w-full rounded-xl";
+      prev.appendChild(im);
+    }
+  } else {
+    prev.textContent = "Sem output ainda (job em execução ou falhou).";
+  }
+}
+
+async function uploadIfNeeded(mode) {
+  if (mode !== "mock_image_to_video") return [];
+  const f = document.getElementById("file").files[0];
+  if (!f) throw new Error("Envie uma imagem para Imagem  Vídeo.");
+  const fd = new FormData();
+  fd.append("file", f);
+  const r = await fetch(API + "/uploads", { method:"POST", body: fd });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || "Upload failed");
+  return [j.path];
+}
+
+document.getElementById("runBtn").onclick = async () => {
+  try {
+    msg("");
+    const mode = document.getElementById("mode").value;
+    const prompt = document.getElementById("prompt").value || "";
+    const duration = parseInt(document.getElementById("duration").value || "4", 10);
+    const fps = parseInt(document.getElementById("fps").value || "24", 10);
+    const aspect = document.getElementById("aspect").value;
+    const content_sensitive = !!document.getElementById("sensitive").checked;
+    const consent = !!document.getElementById("consent").checked;
+
+    const inputs = await uploadIfNeeded(mode);
+
+    const body = {
+      profile_id: mode,
+      mode,
+      prompt_or_script: prompt,
+      inputs,
+      params: { duration, fps, aspect },
+      content_sensitive,
+      consent
+    };
+    const created = await api("/jobs", {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    msg("Job criado: " + created.id);
+
+    // polling
+    const id = created.id;
+    for (let i=0;i<90;i++){
+      const j = await api("/jobs/" + id);
+      if (j.status === "succeeded" || j.status === "failed") {
+        await refreshHistory();
+        await openJob(id);
+        msg("Finalizado: " + j.status);
+        return;
+      }
+      await new Promise(r=>setTimeout(r, 1000));
+    }
+    msg("Job ainda executando (timeout do polling).");
+  } catch (e) {
+    msg("ERRO: " + e.message);
+  }
+};
+
+document.getElementById("cmpBtn").onclick = async () => {
+  try {
+    const a = document.getElementById("jobA").value;
+    const b = document.getElementById("jobB").value;
+    const out = await api("/jobs/compare", {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({a_job_id:a, b_job_id:b})
+    });
+    document.getElementById("cmpOut").textContent = JSON.stringify(out, null, 2);
+  } catch (e) {
+    document.getElementById("cmpOut").textContent = "ERRO: " + e.message;
+  }
+};
+
+refreshHistory().catch(()=>{});
+</script>
+</body>
+</html>

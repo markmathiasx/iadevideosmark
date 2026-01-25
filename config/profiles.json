@@ -1,0 +1,24 @@
+﻿{
+  "groups": [
+    {
+      "id": "video",
+      "name": "Vídeo",
+      "profiles": [
+        { "id": "mock_text_to_video", "name": "MOCK Texto  Vídeo", "badges": ["offline"], "modes": ["mock_text_to_video"] },
+        { "id": "mock_image_to_video", "name": "MOCK Imagem  Vídeo", "badges": ["offline"], "modes": ["mock_image_to_video"] }
+      ]
+    },
+    {
+      "id": "image",
+      "name": "Imagem",
+      "profiles": [
+        { "id": "mock_text_to_image", "name": "MOCK Texto  Imagem", "badges": ["offline"], "modes": ["mock_text_to_image"] }
+      ]
+    }
+  ],
+  "aliases": [
+    { "id": "seedance_like", "name": "Seedance (Local)", "maps_to": "mock_text_to_video" },
+    { "id": "kling_like", "name": "Kling (Local)", "maps_to": "mock_text_to_video" },
+    { "id": "sora_like", "name": "Sora (Local)", "maps_to": "mock_text_to_video" }
+  ]
+}

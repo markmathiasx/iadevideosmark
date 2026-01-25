@@ -1,0 +1,16 @@
+﻿{
+  "default_sensitive_enabled": false,
+  "require_consent_for_sensitive": true,
+  "blocked_terms_when_sensitive_off": [
+    "porn",
+    "sexo explicito",
+    "conteudo explicito",
+    "nude",
+    "nudes",
+    "xxx",
+    "hardcore",
+    "anal",
+    "oral",
+    "cumshot"
+  ]
+}
