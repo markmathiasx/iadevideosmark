@@ -1,5 +1,7 @@
-.git
 **/__pycache__/
 **/*.pyc
-apps/api/.venv
-apps/api/.venv/
+**/.venv/
+outputs/
+storage/
+.git/
+.vscode/

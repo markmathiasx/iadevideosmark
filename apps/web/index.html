@@ -1,114 +1,149 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI Studio Local (MVP)</title>
+  <title>MinhaIA Local</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100">
   <div class="max-w-6xl mx-auto p-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">AI Studio Local (MVP)</h1>
-      <div class="text-sm text-zinc-400">Backend: <span id="apiUrl">http://127.0.0.1:8000</span></div>
+      <div>
+        <h1 class="text-2xl font-semibold">MinhaIA Local</h1>
+        <div class="text-xs text-zinc-400">Executor local (Docker) • http://localhost:8000</div>
+      </div>
+      <div class="flex gap-2">
+        <button class="tab px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm" data-pane="run">Gerar</button>
+        <button class="tab px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-sm" data-pane="assets">Biblioteca</button>
+        <button class="tab px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-sm" data-pane="history">Histórico</button>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-      <div class="lg:col-span-1 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
-        <h2 class="font-medium mb-3">Configuração</h2>
-
-        <label class="block text-sm text-zinc-300">Pipeline</label>
+    <div id="pane-run" class="pane mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <h2 class="font-medium mb-3">Execução</h2>
+        <label class="block text-sm text-zinc-300">Ferramenta</label>
         <select id="mode" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2">
-          <option value="mock_text_to_video">MOCK Texto  Vídeo</option>
-          <option value="mock_text_to_image">MOCK Texto  Imagem</option>
-          <option value="mock_image_to_video">MOCK Imagem  Vídeo</option>
+                    <option value="shorts_builder">Shorts Builder</option>
+          <option value="mock_text_to_video">Texto → Vídeo</option>
+          <option value="mock_image_to_video">Imagem → Vídeo</option>
+          <option value="mock_text_to_image">Texto → Imagem (mock)</option>
+          <option value="ffmpeg_resize">Redimensionar/Aspect</option>
+          <option value="ffmpeg_trim">Cortar/Trim</option>
+          <option value="ffmpeg_concat">Concatenar (2+ vídeos)</option>
+          <option value="ffmpeg_merge_audio">Mesclar Áudio</option>
+          <option value="ffmpeg_extract_audio">Extrair Áudio</option>
+          <option value="ffmpeg_overlay_text">Texto/Overlay</option>
+          <option value="ffmpeg_watermark">Marca d'água</option>
+          <option value="ffmpeg_burn_subtitles">Queimar Legendas</option>
+          <option value="ffmpeg_fade">Fade in/out</option>
         </select>
 
         <label class="block text-sm text-zinc-300 mt-3">Prompt / Script</label>
         <textarea id="prompt" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2 h-28"
-          placeholder="Ex.: 'Apresentador lendo notícia...'"></textarea>
+          placeholder="Roteiro do short / texto principal"></textarea>
 
         <div class="grid grid-cols-3 gap-2 mt-3">
           <div>
             <label class="block text-xs text-zinc-400">Duração (s)</label>
-            <input id="duration" type="number" min="2" max="10" value="4"
+            <input id="duration" type="number" min="2" max="60" value="12"
               class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
           </div>
           <div>
             <label class="block text-xs text-zinc-400">FPS</label>
-            <input id="fps" type="number" min="12" max="30" value="24"
+            <input id="fps" type="number" min="12" max="60" value="30"
               class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2" />
           </div>
           <div>
             <label class="block text-xs text-zinc-400">Aspect</label>
             <select id="aspect" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2">
-              <option value="16:9">16:9</option>
               <option value="9:16">9:16</option>
+              <option value="16:9">16:9</option>
               <option value="1:1">1:1</option>
             </select>
           </div>
         </div>
 
+<label class="block text-sm text-zinc-300 mt-3">Parâmetros avançados (JSON opcional)</label>
+<textarea id="adv" class="w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl p-2 h-24"
+  placeholder='Ex.: {"start":1.2,"end":9.5}  |  {"pos":"tr","scale_w":160}  |  {"audio_ext":"mp3"}'></textarea>
+
         <div class="mt-3 flex items-center gap-2">
           <input id="sensitive" type="checkbox" class="accent-white" />
-          <label for="sensitive" class="text-sm text-zinc-300">Filtro sensível (ativar)</label>
+          <label for="sensitive" class="text-sm text-zinc-300">Modo sensível (exige consentimento)</label>
         </div>
-
         <div id="consentWrap" class="mt-2 hidden">
           <div class="flex items-center gap-2">
             <input id="consent" type="checkbox" class="accent-white" />
-            <label for="consent" class="text-sm text-zinc-300">Confirmo consentimento e responsabilidade</label>
+            <label for="consent" class="text-sm text-zinc-300">Confirmo direitos/consentimento</label>
           </div>
         </div>
 
         <div class="mt-3">
-          <label class="block text-sm text-zinc-300">Upload (somente para Imagem  Vídeo)</label>
-          <input id="file" type="file" class="w-full mt-1 text-sm text-zinc-300" />
+          <label class="block text-sm text-zinc-300">Uploads</label>
+          <div class="text-xs text-zinc-500">Conforme o modo: imagem/vídeo/áudio/legenda.</div>
+          <input id="files" type="file" multiple class="w-full mt-2 text-sm text-zinc-300" />
         </div>
 
-        <button id="runBtn" class="mt-4 w-full bg-white text-zinc-900 rounded-xl py-2 font-medium">
-          Gerar
-        </button>
-
+        <button id="runBtn" class="mt-4 w-full bg-white text-zinc-900 rounded-xl py-2 font-medium">Executar</button>
         <div id="msg" class="mt-3 text-sm text-zinc-300"></div>
       </div>
 
       <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
-        <h2 class="font-medium mb-3">Resultado</h2>
-
-        <div id="preview" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 min-h-[320px] flex items-center justify-center text-zinc-500">
-          Nenhum job ainda.
-        </div>
-
+        <h2 class="font-medium mb-3">Preview</h2>
+        <div id="preview" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 min-h-[320px] flex items-center justify-center text-zinc-500">Nenhum job ainda.</div>
         <div class="mt-4">
-          <h3 class="font-medium mb-2">Histórico</h3>
-          <div id="history" class="space-y-2"></div>
-        </div>
-
-        <div class="mt-4">
-          <h3 class="font-medium mb-2">Comparar (A/B)</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <select id="jobA" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
-            <select id="jobB" class="bg-zinc-950 border border-zinc-800 rounded-xl p-2"></select>
-          </div>
-          <button id="cmpBtn" class="mt-2 bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Comparar</button>
-          <pre id="cmpOut" class="mt-2 text-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-3 overflow-auto"></pre>
+          <h3 class="font-medium mb-2">Logs</h3>
+          <pre id="logs" class="text-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-3 overflow-auto min-h-[120px]"></pre>
         </div>
       </div>
+    </div>
+
+    <div id="pane-assets" class="pane mt-4 hidden grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <h2 class="font-medium mb-3">Importar Assets</h2>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3">
+          <div class="text-sm font-medium">CDC PHIL</div>
+          <div class="text-xs text-zinc-500">PID (ex.: 17418)</div>
+          <div class="flex gap-2 mt-2">
+            <input id="cdcPid" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-sm" placeholder="pid" />
+            <button id="cdcBtn" class="bg-white text-zinc-900 rounded-lg px-3 text-sm font-medium">Importar</button>
+          </div>
+        </div>
+        <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 mt-3">
+          <div class="text-sm font-medium">Wikimedia Commons</div>
+          <div class="text-xs text-zinc-500">Categoria (ex.: Human_anatomy)</div>
+          <input id="commonsCat" class="w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-sm" placeholder="Category:Human_anatomy" />
+          <div class="flex gap-2 mt-2">
+            <input id="commonsLimit" class="w-24 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-sm" value="20" />
+            <button id="commonsBtn" class="bg-white text-zinc-900 rounded-lg px-3 text-sm font-medium">Importar</button>
+          </div>
+        </div>
+        <div id="assetsMsg" class="mt-3 text-sm text-zinc-300"></div>
+      </div>
+      <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+        <h2 class="font-medium mb-3">Itens</h2>
+        <div id="assetsList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </div>
+    </div>
+
+    <div id="pane-history" class="pane mt-4 hidden bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-medium">Histórico</h2>
+        <button id="refreshBtn" class="bg-zinc-200 text-zinc-900 rounded-xl px-3 py-2 text-sm font-medium">Atualizar</button>
+      </div>
+      <div class="mt-3" id="history" class="space-y-2"></div>
     </div>
   </div>
 
 <script>
 const API = "http://127.0.0.1:8000";
-document.getElementById("apiUrl").textContent = API;
-
-const msg = (t) => document.getElementById("msg").textContent = t;
-
 const sensitive = document.getElementById("sensitive");
 const consentWrap = document.getElementById("consentWrap");
-sensitive.addEventListener("change", () => {
-  consentWrap.classList.toggle("hidden", !sensitive.checked);
-});
+sensitive.addEventListener("change", () => consentWrap.classList.toggle("hidden", !sensitive.checked));
+
+function setMsg(id, t){ document.getElementById(id).textContent = t || ""; }
 
 async function api(path, opt) {
   const r = await fetch(API + path, opt);
@@ -117,32 +152,36 @@ async function api(path, opt) {
   return j;
 }
 
-async function refreshHistory() {
-  const h = await api("/jobs");
-  const items = h.items || [];
-  const host = document.getElementById("history");
-  host.innerHTML = "";
-  const jobA = document.getElementById("jobA");
-  const jobB = document.getElementById("jobB");
-  jobA.innerHTML = ""; jobB.innerHTML = "";
-  items.forEach(it => {
-    const row = document.createElement("div");
-    row.className = "border border-zinc-800 rounded-xl p-2 flex items-center justify-between";
-    row.innerHTML = `<div>
-        <div class="text-sm">${it.id} <span class="text-zinc-400">(${it.status})</span></div>
-        <div class="text-xs text-zinc-500">${it.mode}  ${it.created_at}</div>
-      </div>
-      <button class="text-xs bg-white text-zinc-900 rounded-lg px-2 py-1">Abrir</button>`;
-    row.querySelector("button").onclick = () => openJob(it.id);
-    host.appendChild(row);
-
-    const optA = document.createElement("option"); optA.value = it.id; optA.textContent = it.id;
-    const optB = document.createElement("option"); optB.value = it.id; optB.textContent = it.id;
-    jobA.appendChild(optA); jobB.appendChild(optB);
+function showPane(name){
+  document.querySelectorAll(".pane").forEach(p=>p.classList.add("hidden"));
+  document.getElementById("pane-"+name).classList.remove("hidden");
+  document.querySelectorAll(".tab").forEach(b=>{
+    const active = b.dataset.pane === name;
+    b.classList.toggle("bg-zinc-900", active);
+    b.classList.toggle("bg-zinc-950", !active);
   });
+  if (name === "assets") refreshAssets();
+  if (name === "history") refreshHistory();
+}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>showPane(b.dataset.pane));
+showPane("run");
+
+async function uploadFiles(){
+  const files = Array.from(document.getElementById("files").files || []);
+  if (!files.length) return [];
+  const paths = [];
+  for (const f of files){
+    const fd = new FormData();
+    fd.append("file", f);
+    const r = await fetch(API + "/uploads", { method:"POST", body: fd });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.detail || "Upload failed");
+    paths.push(j.path);
+  }
+  return paths;
 }
 
-async function openJob(id) {
+async function openJob(id){
   const j = await api("/jobs/" + id);
   const prev = document.getElementById("preview");
   prev.innerHTML = "";
@@ -158,81 +197,125 @@ async function openJob(id) {
       prev.appendChild(im);
     }
   } else {
-    prev.textContent = "Sem output ainda (job em execução ou falhou).";
+    prev.textContent = "Sem output (executando ou falhou).";
+  }
+  return j;
+}
+
+async function loadLogs(id){
+  try{
+    const j = await api("/logs/" + id);
+    document.getElementById("logs").textContent = j.text || "";
+  }catch(e){
+    document.getElementById("logs").textContent = "";
   }
 }
 
-async function uploadIfNeeded(mode) {
-  if (mode !== "mock_image_to_video") return [];
-  const f = document.getElementById("file").files[0];
-  if (!f) throw new Error("Envie uma imagem para Imagem  Vídeo.");
-  const fd = new FormData();
-  fd.append("file", f);
-  const r = await fetch(API + "/uploads", { method:"POST", body: fd });
-  const j = await r.json();
-  if (!r.ok) throw new Error(j.detail || "Upload failed");
-  return [j.path];
+async function refreshHistory(){
+  const h = await api("/jobs");
+  const items = h.items || [];
+  const host = document.getElementById("history");
+  host.innerHTML = "";
+  items.forEach(it=>{
+    const row = document.createElement("div");
+    row.className = "border border-zinc-800 rounded-xl p-2 flex items-center justify-between";
+    row.innerHTML = `<div>
+        <div class="text-sm">${it.id} <span class="text-zinc-400">(${it.status})</span></div>
+        <div class="text-xs text-zinc-500">${it.mode} • ${it.created_at}</div>
+      </div>
+      <button class="text-xs bg-white text-zinc-900 rounded-lg px-2 py-1">Abrir</button>`;
+    row.querySelector("button").onclick = async () => {
+      showPane("run");
+      await openJob(it.id);
+      await loadLogs(it.id);
+      setMsg("msg", "Aberto: " + it.id);
+    };
+    host.appendChild(row);
+  });
 }
 
+document.getElementById("refreshBtn").onclick = refreshHistory;
+
 document.getElementById("runBtn").onclick = async () => {
-  try {
-    msg("");
+  try{
+    setMsg("msg", "");
     const mode = document.getElementById("mode").value;
     const prompt = document.getElementById("prompt").value || "";
-    const duration = parseInt(document.getElementById("duration").value || "4", 10);
-    const fps = parseInt(document.getElementById("fps").value || "24", 10);
+    const duration = parseInt(document.getElementById("duration").value || "12", 10);
+    const fps = parseInt(document.getElementById("fps").value || "30", 10);
     const aspect = document.getElementById("aspect").value;
+    let adv = {};
+    const advRaw = document.getElementById("adv").value || "";
+    if (advRaw.trim()) { try { adv = JSON.parse(advRaw); } catch(e){ throw new Error("JSON avançado inválido."); } }
     const content_sensitive = !!document.getElementById("sensitive").checked;
     const consent = !!document.getElementById("consent").checked;
-
-    const inputs = await uploadIfNeeded(mode);
-
-    const body = {
-      profile_id: mode,
-      mode,
-      prompt_or_script: prompt,
-      inputs,
-      params: { duration, fps, aspect },
-      content_sensitive,
-      consent
-    };
-    const created = await api("/jobs", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body)
-    });
-    msg("Job criado: " + created.id);
-
-    // polling
+    const inputs = await uploadFiles();
+    const body = { profile_id: mode, mode, prompt_or_script: prompt, inputs, params: Object.assign({ duration, fps, aspect }, adv), content_sensitive, consent };
+    const created = await api("/jobs", { method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
     const id = created.id;
-    for (let i=0;i<90;i++){
+    setMsg("msg", "Job criado: " + id);
+    for (let i=0;i<120;i++){
       const j = await api("/jobs/" + id);
-      if (j.status === "succeeded" || j.status === "failed") {
-        await refreshHistory();
+      if (j.status === "succeeded" || j.status === "failed"){
         await openJob(id);
-        msg("Finalizado: " + j.status);
+        await loadLogs(id);
+        await refreshHistory();
+        setMsg("msg", "Finalizado: " + j.status);
         return;
       }
       await new Promise(r=>setTimeout(r, 1000));
     }
-    msg("Job ainda executando (timeout do polling).");
-  } catch (e) {
-    msg("ERRO: " + e.message);
+    setMsg("msg", "Job ainda executando (timeout).");
+  }catch(e){
+    setMsg("msg", "ERRO: " + e.message);
   }
 };
 
-document.getElementById("cmpBtn").onclick = async () => {
-  try {
-    const a = document.getElementById("jobA").value;
-    const b = document.getElementById("jobB").value;
-    const out = await api("/jobs/compare", {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({a_job_id:a, b_job_id:b})
-    });
-    document.getElementById("cmpOut").textContent = JSON.stringify(out, null, 2);
-  } catch (e) {
-    document.getElementById("cmpOut").textContent = "ERRO: " + e.message;
+async function refreshAssets(){
+  const a = await api("/assets");
+  const items = a.items || [];
+  const host = document.getElementById("assetsList");
+  host.innerHTML = "";
+  items.forEach(it=>{
+    const card = document.createElement("div");
+    card.className = "bg-zinc-950 border border-zinc-800 rounded-2xl p-3";
+    const url = API + "/assets/file/" + it.id;
+    const isImg = (it.local_file||"").toLowerCase().match(/\.(png|jpg|jpeg|webp)$/);
+    card.innerHTML = `
+      <div class="text-sm font-medium truncate">${it.title || it.id}</div>
+      <div class="text-xs text-zinc-500 truncate">${it.license || ""}</div>
+      <div class="text-xs text-zinc-500 truncate">${it.credit || ""}</div>
+      <div class="mt-2 ${isImg ? "" : "hidden"}"><img src="${url}" class="w-full rounded-xl"/></div>
+      <div class="mt-2 text-xs text-zinc-500 break-all">${it.original_page || ""}</div>
+    `;
+    host.appendChild(card);
+  });
+}
+
+document.getElementById("cdcBtn").onclick = async () => {
+  try{
+    setMsg("assetsMsg", "");
+    const pid = parseInt(document.getElementById("cdcPid").value || "0", 10);
+    if (!pid) throw new Error("PID inválido.");
+    await api("/assets/import/cdc_phil", { method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({pid}) });
+    setMsg("assetsMsg", "Importado.");
+    await refreshAssets();
+  }catch(e){
+    setMsg("assetsMsg", "ERRO: " + e.message);
+  }
+};
+
+document.getElementById("commonsBtn").onclick = async () => {
+  try{
+    setMsg("assetsMsg", "");
+    const category = document.getElementById("commonsCat").value || "";
+    const limit = parseInt(document.getElementById("commonsLimit").value || "20", 10);
+    if (!category) throw new Error("Categoria vazia.");
+    await api("/assets/import/commons_category", { method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({category, limit}) });
+    setMsg("assetsMsg", "Importado.");
+    await refreshAssets();
+  }catch(e){
+    setMsg("assetsMsg", "ERRO: " + e.message);
   }
 };
 

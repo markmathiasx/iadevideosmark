@@ -5,7 +5,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./outputs:/app/outputs
       - ./storage:/app/storage
+      - ./outputs:/app/outputs
     environment:
       - PYTHONUNBUFFERED=1
+    restart: unless-stopped
