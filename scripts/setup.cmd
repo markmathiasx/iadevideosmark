@@ -1,4 +1,4 @@
 @echo off
-setlocal
 cd /d "%~dp0.."
-pwsh -NoLogo -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
+
