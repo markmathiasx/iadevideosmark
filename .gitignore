@@ -1,11 +1,7 @@
-﻿node_modules/
-.vscode/
-.env
-*.db
+node_modules/
+dist/
+.venv/
 __pycache__/
 *.pyc
-apps/api/.venv/
-apps/web/dist/
 outputs/
-storage/
-tools/
+.env

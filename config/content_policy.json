@@ -1,9 +1,33 @@
 {
-  "default_sensitive_enabled": false,
-  "require_consent_for_sensitive": true,
-  "blocked_terms_when_sensitive_off": [
-    "sexual",
-    "porn",
-    "xxx"
-  ]
+  "blocked": {
+    "sexual_explicit": [
+      "porn",
+      "sexo explícito",
+      "genitais",
+      "nudez explícita",
+      "hardcore"
+    ],
+    "minors": [
+      "menor de idade",
+      "criança nua",
+      "teen nude",
+      "loli"
+    ],
+    "illegal": [
+      "explosivo caseiro",
+      "bomba",
+      "armamento ilegal"
+    ],
+    "hate": [
+      "extermínio",
+      "nazista",
+      "supremacia branca"
+    ]
+  },
+  "allowed_examples": [
+    "foto do pé",
+    "um cachorro correndo no parque",
+    "paisagem de montanha ao pôr do sol"
+  ],
+  "notes": "Política heurística local. Para produção, integrar moderação/classificação robusta."
 }

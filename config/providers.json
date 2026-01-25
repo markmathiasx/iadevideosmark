@@ -1,0 +1,170 @@
+{
+  "default_provider": "mock",
+  "providers": [
+    {
+      "id": "mock",
+      "name": "Mock (offline)",
+      "badges": [
+        "offline",
+        "no-key"
+      ],
+      "capabilities": [
+        "text_to_image",
+        "image_edit",
+        "image_upscale",
+        "text_to_video",
+        "image_to_video",
+        "video_edit"
+      ],
+      "notes": "Placeholder (Pillow/FFmpeg) para testar UI/pipeline."
+    },
+    {
+      "id": "comfyui",
+      "name": "ComfyUI (local)",
+      "badges": [
+        "local",
+        "workflow"
+      ],
+      "capabilities": [
+        "text_to_image",
+        "image_edit",
+        "image_upscale",
+        "text_to_video",
+        "image_to_video"
+      ],
+      "notes": "HTTP API do ComfyUI (/prompt e /history). Requer ComfyUI rodando."
+    }
+  ],
+  "services_catalog": [
+    {
+      "group": "video",
+      "name": "Wan 2.6",
+      "best_for": "vídeo com áudio; clipes curtos cinematográficos"
+    },
+    {
+      "group": "video",
+      "name": "Wan 2.5",
+      "best_for": "produção em volume com consistência"
+    },
+    {
+      "group": "video",
+      "name": "Wan 2.2",
+      "best_for": "detalhes e estabilidade de movimento"
+    },
+    {
+      "group": "video",
+      "name": "Wan Animate",
+      "best_for": "animar personagem via imagem+vídeo guia"
+    },
+    {
+      "group": "video",
+      "name": "Hailuo 2.3",
+      "best_for": "qualidade geral e experimentação"
+    },
+    {
+      "group": "video",
+      "name": "Hailuo D2",
+      "best_for": "mais liberdade criativa"
+    },
+    {
+      "group": "video",
+      "name": "Seedance 1.5 Pro",
+      "best_for": "controle de movimento e multi-shot"
+    },
+    {
+      "group": "video",
+      "name": "Seedance 1.0 Pro Fast",
+      "best_for": "iteração rápida"
+    },
+    {
+      "group": "video",
+      "name": "Seedance 1.0 Pro",
+      "best_for": "entregas finais"
+    },
+    {
+      "group": "video",
+      "name": "Seedance 1.0 Lite",
+      "best_for": "cenas lineares e transições"
+    },
+    {
+      "group": "video",
+      "name": "Veo 3.1 (Google)",
+      "best_for": "realismo/qualidade e áudio"
+    },
+    {
+      "group": "video",
+      "name": "Kling 2.5",
+      "best_for": "dinâmica de movimento e 1080p"
+    },
+    {
+      "group": "video",
+      "name": "Runway Aleph",
+      "best_for": "edição/estilização de vídeo"
+    },
+    {
+      "group": "video",
+      "name": "Sora 2 (OpenAI)",
+      "best_for": "geração de vídeo (texto/imagem)"
+    },
+    {
+      "group": "image",
+      "name": "Z-Image Turbo",
+      "best_for": "rascunhos rápidos"
+    },
+    {
+      "group": "image",
+      "name": "Nano Banana Pro",
+      "best_for": "qualidade elevada"
+    },
+    {
+      "group": "image",
+      "name": "SeeDream 4.0",
+      "best_for": "edição de imagem"
+    },
+    {
+      "group": "image",
+      "name": "Seedream 4.5",
+      "best_for": "edição mais forte/precisa"
+    },
+    {
+      "group": "image",
+      "name": "Nano Banana",
+      "best_for": "gerar + editar custo/benefício"
+    },
+    {
+      "group": "image",
+      "name": "Flux Kontext",
+      "best_for": "controle de estilo e fidelidade"
+    },
+    {
+      "group": "image",
+      "name": "Flux 1.1 Pro",
+      "best_for": "texto→imagem custo-efetivo"
+    },
+    {
+      "group": "image",
+      "name": "GPT-4o Image",
+      "best_for": "multi-image→image / referências"
+    },
+    {
+      "group": "image",
+      "name": "Flux Krea Dev LoRA",
+      "best_for": "texto→imagem criativo"
+    },
+    {
+      "group": "image",
+      "name": "Flux Kontext LoRA",
+      "best_for": "imagem→imagem criativo"
+    },
+    {
+      "group": "image",
+      "name": "Image Face Swap",
+      "best_for": "troca de rosto (cuidado)"
+    },
+    {
+      "group": "image",
+      "name": "Image Upscaler",
+      "best_for": "upscale até 8K"
+    }
+  ]
+}
