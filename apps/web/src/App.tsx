@@ -40,6 +40,7 @@ export default function App() {
   const [width, setWidth] = useState<number>(1280);
   const [height, setHeight] = useState<number>(720);
   const [outputFormat, setOutputFormat] = useState<string>("jpeg");
+  const [videoFormat, setVideoFormat] = useState<string>("mp4");
   const [jpegQuality, setJpegQuality] = useState<number>(95);
   const [webpQuality, setWebpQuality] = useState<number>(90);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -105,6 +106,9 @@ export default function App() {
         params.output_format = outputFormat;
         params.jpeg_quality = jpegQuality;
         params.webp_quality = webpQuality;
+      }
+      if (isVideoTask) {
+        params.video_format = videoFormat;
       }
       const form = new FormData();
       form.set("provider", provider);
@@ -287,8 +291,19 @@ export default function App() {
             </div>
           ) : null}
 
-          <div className="row">
-            <div>
+          {isVideoTask ? (
+            <div className="row">
+              <div>
+                <label>Formato do vídeo</label>
+                <select value={videoFormat} onChange={(e) => setVideoFormat(e.target.value)}>
+                  <option value="mp4">MP4 (recomendado)</option>
+                  <option value="webm">WEBM</option>
+                  <option value="gif">GIF</option>
+                </select>
+              </div>
+            </div>
+          ) : null}
+              <div>
               <label>Width</label>
               <input type="number" value={width} onChange={(e) => setWidth(parseInt(e.target.value || "0", 10))} />
             </div>
@@ -297,11 +312,14 @@ export default function App() {
               <input type="number" value={height} onChange={(e) => setHeight(parseInt(e.target.value || "0", 10))} />
             </div>
           </div>
-
-          <div className="row">
-            <div>
+            <div className="row">
+              <div>
               <label>Duração (s)</label>
-              <input type="number" value={duration} onChange={(e) => setDuration(parseFloat(e.target.value || "0"))} />
+              <input type="number" min={1} max={60} step={1} value={duration} onChange={(e) => {
+                const v = parseFloat(e.target.value || "0");
+                const vv = Number.isFinite(v) ? v : 0;
+                setDuration(Math.max(1, Math.min(60, vv || 1)));
+              }} />
             </div>
             <div>
               <label>FPS</label>

@@ -58,30 +58,24 @@ class MockProvider:
             raise RuntimeError("FFmpeg não encontrado no PATH. Instale ou adicione ao PATH para gerar vídeo no modo mock.")
 
     def _ffmpeg_font_opt(self) -> str:
-        """Return drawtext font option (may be empty)."""
-        sys = platform.system().lower()
-        if "windows" in sys:
-            windir = os.environ.get("WINDIR", r"C:\\Windows")
-            p = Path(windir) / "Fonts" / "arial.ttf"
-            if p.exists():
-                # ffmpeg expects escaped drive colon when passed as arg
-                # Example: fontfile=C\:/Windows/Fonts/arial.ttf
-                f = str(p).replace("\\\\", "/")
-                if ":" in f:
-                    drive, rest = f.split(":", 1)
-                    f = drive + "\\:/" + rest.lstrip("/")
-                return f"fontfile={f}:"
-            return ""
-        # Linux/macOS: best effort
-        for cand in (
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
-        ):
-            if Path(cand).exists():
-                return f"fontfile={cand}:"
-        return ""
+    """Return drawtext font option prefix ending with ':' or empty string.
 
-    def _escape_drawtext(self, s: str) -> str:
+    Nota: no Windows, evitar 'fontfile=C:\...'(drive ':') porque o parser do
+    filtro drawtext é sensível a ':' e costuma quebrar. Preferimos nome de fonte.
+    """
+    sys = platform.system().lower()
+    if "windows" in sys:
+        # Usa o nome da fonte (sem caminho) para evitar problemas de escaping.
+        return "font=Arial:"
+    # Linux/macOS: best effort com fontfile (mais estável nessas plataformas).
+    for cand in (
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+    ):
+        if Path(cand).exists():
+            return f"fontfile={cand}:"
+    return ""
+def _escape_drawtext(self, s: str) -> str:
         # Minimal escaping for ffmpeg drawtext filter parser
         return (
             s.replace("\\\\", "\\\\\\\\")
@@ -89,7 +83,7 @@ class MockProvider:
              .replace("'", "\\\\'")
         )
 
-    def _write_video(self, out_path: Path, prompt: str, duration_s: float, fps: int, size: tuple[int,int]) -> None:
+    def _write_video(self, out_path: Path, prompt: str, duration_s: float, fps: int, size: tuple[int,int], video_format: str = "mp4") -> None:
         self._require_ffmpeg()
         w, h = size
         duration_s = float(duration_s)
@@ -100,9 +94,10 @@ class MockProvider:
         if duration_s > 60.0:
             duration_s = 60.0
 
-        # Vídeo colorido + drawtext (evita depender de imagens externas).
+        # Vídeo colorido + drawtext (placeholder). Se drawtext falhar (font/escape),
+        # fazemos fallback para um vídeo simples sem overlay (para não quebrar o pipeline).
         font_opt = self._ffmpeg_font_opt()
-        safe_prompt = self._escape_drawtext(prompt)
+        safe_prompt = self._escape_drawtext(prompt or "")
         draw = (
             "drawtext="
             + font_opt
@@ -110,21 +105,61 @@ class MockProvider:
             + safe_prompt
             + "':x=20:y=H-60:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.5"
         )
-        cmd = [
+
+        video_format = (video_format or "mp4").lower()
+        if video_format not in ("mp4", "webm", "gif"):
+            video_format = "mp4"
+
+        base = [
             "ffmpeg",
             "-y",
-            "-f","lavfi",
+            "-f", "lavfi",
             "-i", f"color=c=0x202020:s={w}x{h}:r={fps}",
             "-t", f"{duration_s}",
-            "-vf", draw,
-            "-pix_fmt","yuv420p",
-            "-movflags", "+faststart",
-            str(out_path)
         ]
+
+        def cmd_with_vf(vf: str | None) -> list[str]:
+            cmd = base.copy()
+            if vf:
+                cmd += ["-vf", vf]
+            if video_format == "webm":
+                # Pode falhar se seu ffmpeg não tiver vp9; nesse caso faremos fallback.
+                cmd += ["-c:v", "libvpx-vp9", "-crf", "33", "-b:v", "0", "-pix_fmt", "yuv420p"]
+            elif video_format == "gif":
+                cmd += ["-f", "gif"]
+            else:
+                cmd += ["-pix_fmt", "yuv420p", "-movflags", "+faststart"]
+            cmd += [str(out_path)]
+            return cmd
+
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        p = subprocess.run(cmd, capture_output=True, text=True)
+
+        # 1) tenta com drawtext
+        p = subprocess.run(cmd_with_vf(draw), capture_output=True, text=True)
         if p.returncode != 0:
-            raise RuntimeError("FFmpeg falhou: " + (p.stderr[-800:] if p.stderr else "unknown error"))
+            # 2) fallback: sem drawtext
+            p2 = subprocess.run(cmd_with_vf(None), capture_output=True, text=True)
+            if p2.returncode != 0 and video_format in ("webm", "gif"):
+                # 3) fallback final: mp4
+                video_format = "mp4"
+                out_path_mp4 = out_path.with_suffix(".mp4")
+                p3 = subprocess.run(
+                    [
+                        "ffmpeg","-y","-f","lavfi",
+                        "-i", f"color=c=0x202020:s={w}x{h}:r={fps}",
+                        "-t", f"{duration_s}",
+                        "-pix_fmt","yuv420p",
+                        "-movflags","+faststart",
+                        str(out_path_mp4),
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                if p3.returncode != 0:
+                    raise RuntimeError("FFmpeg falhou: " + (p3.stderr[-800:] if p3.stderr else "unknown error"))
+                return
+            if p2.returncode != 0:
+                raise RuntimeError("FFmpeg falhou: " + (p2.stderr[-800:] if p2.stderr else "unknown error"))
 
     def run(self, task: str, prompt: str, params: dict[str, Any], inputs: dict[str, Path], outputs_dir: Path) -> ProviderResult:
         job_dir = outputs_dir / "jobs" / str(uuid.uuid4())
@@ -141,8 +176,14 @@ class MockProvider:
             h = int(params.get("height", 720))
             fps = int(params.get("fps", 24))
             duration_s = float(params.get("duration_s", 6.0))
-            out_path = job_dir / "video.mp4"
-            self._write_video(out_path, prompt, duration_s, fps, (w, h))
-            return ProviderResult(outputs={"video": str(out_path.relative_to(outputs_dir))}, meta={"mode":"mock","duration_s":duration_s})
+            video_fmt = str(params.get("video_format", "mp4")).lower()
+            ext = "mp4"
+            if video_fmt == "webm":
+                ext = "webm"
+            elif video_fmt == "gif":
+                ext = "gif"
+            out_path = job_dir / f"video.{ext}"
+            self._write_video(out_path, prompt, duration_s, fps, (w, h), video_fmt)
+            return ProviderResult(outputs={"video": str(out_path.relative_to(outputs_dir))}, meta={"mode":"mock","duration_s":duration_s,"video_format":video_fmt})
         else:
             raise RuntimeError(f"Task não suportada no mock: {task}")
