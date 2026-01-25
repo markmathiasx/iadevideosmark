@@ -1,64 +1,64 @@
 #!/usr/bin/env python3
 """
-Baixa automaticamente listas (top 100 por downloads) de modelos do Hugging Face
-para várias tasks e grava em config/hf_models_autolist.json.
+Discover top models on Hugging Face Hub by task/pipeline_tag.
 
-Uso (na raiz do projeto):
-  .\.venv\Scripts\python.exe scripts\hf_discover.py
+Writes:
+  - config/hf_models_autolist.json
 """
 from __future__ import annotations
-
+import argparse
 import json
 import os
 from pathlib import Path
-from typing import Dict, List
 import time
-
-import httpx
+import urllib.parse
+import urllib.request
 
 HF_API = "https://huggingface.co/api/models"
 
-TASK_TO_PIPELINE = {
-    "text_to_image": "text-to-image",
-    "image_to_image": "image-to-image",
-    "text_to_video": "text-to-video",
-    "image_to_video": "image-to-video",
-    "text_generation": "text-generation",
-}
+def http_get_json(url: str, timeout: int = 30):
+    req = urllib.request.Request(url, headers={"user-agent": "iadevideosmark/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
 
-def fetch_models(pipeline_tag: str, limit: int = 100) -> List[dict]:
-    params = {
-        "pipeline_tag": pipeline_tag,
-        "sort": "downloads",
-        "direction": -1,
-        "limit": limit,
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--task", default="text-to-image", help="pipeline_tag (ex.: text-to-image, image-to-image, text-to-video)")
+    ap.add_argument("--limit", type=int, default=100)
+    ap.add_argument("--sort", default="downloads", choices=["downloads", "likes", "lastModified"])
+    ap.add_argument("--out", default="config/hf_models_autolist.json")
+    args = ap.parse_args()
+
+    qs = {
+        "pipeline_tag": args.task,
+        "sort": args.sort,
+        "direction": "-1",
+        "limit": str(args.limit),
+        "full": "true",
     }
-    with httpx.Client(timeout=60) as c:
-        r = c.get(HF_API, params=params)
-        r.raise_for_status()
-        return r.json()
+    url = HF_API + "?" + urllib.parse.urlencode(qs)
+    data = http_get_json(url)
+    out = []
+    for m in data:
+        out.append({
+            "id": m.get("id"),
+            "pipeline_tag": m.get("pipeline_tag"),
+            "downloads": m.get("downloads"),
+            "likes": m.get("likes"),
+            "library_name": m.get("library_name"),
+            "tags": m.get("tags", [])[:30],
+            "private": m.get("private", False),
+            "gated": m.get("gated", False),
+        })
 
-def main() -> None:
-    out = {"generated_at": int(time.time()), "by_task": {}}
-    for task, tag in TASK_TO_PIPELINE.items():
-        models = fetch_models(tag, limit=100)
-        # mantém só o essencial
-        out["by_task"][task] = [
-            {
-                "id": m.get("modelId") or m.get("id"),
-                "downloads": m.get("downloads"),
-                "likes": m.get("likes"),
-                "pipeline_tag": m.get("pipeline_tag") or tag,
-                "library": m.get("library_name"),
-            }
-            for m in models
-            if (m.get("modelId") or m.get("id"))
-        ]
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.out).write_text(json.dumps({
+        "generated_at": time.time(),
+        "task": args.task,
+        "models": out,
+    }, indent=2), encoding="utf-8")
 
-    Path("config").mkdir(exist_ok=True)
-    p = Path("config/hf_models_autolist.json")
-    p.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[ok] wrote {p}")
+    print(f"Wrote {args.out} with {len(out)} models for task={args.task}")
 
 if __name__ == "__main__":
     main()

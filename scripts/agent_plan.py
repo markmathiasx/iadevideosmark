@@ -1,61 +1,74 @@
 #!/usr/bin/env python3
 """
-Gera um "plano" JSON (não é chain-of-thought) a partir de um comando em PT-BR,
-usando um LLM local no Ollama (ex.: deepseek-r1-14b).
+Turn a natural-language instruction into a *job plan* JSON.
 
-Uso:
-  .\.venv\Scripts\python.exe scripts\agent_plan.py "bota um sorvete no lugar da cerveja" --image
+Backends supported:
+- Ollama (local): POST /api/chat (recommended for DeepSeek R1-14B)
+- OpenAI (optional): chat completions (requires OPENAI_API_KEY)
 
-Saída: JSON em stdout.
+This does NOT expose "chain-of-thought". It outputs an auditable plan.
 """
 from __future__ import annotations
-
 import argparse
 import json
 import os
-from typing import Any, Dict
+import urllib.request
 
-import httpx
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "deepseek-r1:14b")
 
-DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "deepseek-r1:14b")
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-
-SYSTEM = """Você é um planejador para um app local de geração/edição de imagem/vídeo.
-Transforme a instrução do usuário em um JSON curto com:
-- task: um de ["text_to_image","image_edit","image_upscale","text_to_video","image_to_video","video_edit"]
-- prompt: string final (PT-BR ok)
-- params: {width:int,height:int,duration_s:float,fps:int,output_format:"jpeg|png|webp",jpeg_quality:int,webp_quality:int,video_format:"mp4|webm|gif"}
+SYSTEM = """Você é um planejador de jobs para um app multimídia. Gere SOMENTE JSON.
+Esquema:
+{
+  "provider": "mock|comfyui|huggingface|openai",
+  "task": "text_to_image|image_edit|image_upscale|image_to_video|text_to_video",
+  "prompt": "string",
+  "width": 1280,
+  "height": 1024,
+  "duration_s": 6,
+  "fps": 24,
+  "output_format": "jpeg|png|mp4",
+  "output_profile": "draft|high|ultra",
+  "output_subdir": "jobs",
+  "jpeg_quality": 95
+}
 Regras:
-- Se o usuário mencionou 'na imagem' ou forneceu imagem: prefira image_edit.
-- Se pediu vídeo: use text_to_video ou image_to_video.
-- Padrões: width=1024, height=1024, duration_s=6, fps=24, output_format="jpeg", jpeg_quality=95, video_format="mp4".
-Responda APENAS com JSON válido (sem markdown)."""
+- Se o pedido for editar uma imagem (trocar um objeto), use task=image_edit.
+- Se pedir vídeo a partir de imagem: image_to_video. A partir de texto: text_to_video.
+- Sempre setar output_format correto (mp4 em vídeo, jpeg em imagem).
+- Se faltar info, use defaults seguros (1280x1024, 6s, 24fps, high, jpeg 95).
+"""
 
-def ollama_plan(model: str, user_text: str) -> Dict[str, Any]:
+def post_json(url: str, payload: dict, timeout: int = 60):
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"content-type":"application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+def ollama_plan(text: str, hint_task: str | None = None, hint_provider: str | None = None):
+    url = f"{OLLAMA_HOST}/api/chat"
+    user = text if not hint_task else f"{text}\n\n(hint_task={hint_task}, hint_provider={hint_provider})"
     payload = {
-        "model": model,
+        "model": OLLAMA_MODEL,
         "messages": [
-            {"role": "system", "content": SYSTEM},
-            {"role": "user", "content": user_text},
+            {"role":"system","content": SYSTEM},
+            {"role":"user","content": user},
         ],
         "stream": False,
         "options": {"temperature": 0.2},
     }
-    with httpx.Client(timeout=120) as c:
-        r = c.post(f"{OLLAMA_URL}/api/chat", json=payload)
-        r.raise_for_status()
-        data = r.json()
-        content = data.get("message", {}).get("content", "").strip()
-        return json.loads(content)
+    resp = post_json(url, payload)
+    content = resp.get("message", {}).get("content", "").strip()
+    return json.loads(content)
 
-def main() -> None:
+def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("instruction")
-    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("text")
+    ap.add_argument("--hint_task", default=None)
+    ap.add_argument("--hint_provider", default=None)
     args = ap.parse_args()
 
-    plan = ollama_plan(args.model, args.instruction)
-    print(json.dumps(plan, ensure_ascii=False, indent=2))
+    plan = ollama_plan(args.text, args.hint_task, args.hint_provider)
+    print(json.dumps(plan, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
     main()

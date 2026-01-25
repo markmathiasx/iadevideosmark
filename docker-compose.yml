@@ -1,9 +1,48 @@
+version: "3.9"
+
 services:
   api:
-    build: .
-    container_name: minhaia_api
+    build:
+      context: .
+      target: api
+    container_name: iadevideosmark_api
     ports:
       - "8000:8000"
+    environment:
+      # If you use Ollama on the host (Windows), this usually works.
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OUTPUTS_DIR=/app/outputs
     volumes:
-      - ./storage:/app/storage
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+
+  # Optional UI service for dev (Vite). Run with:
+  #   docker compose --profile ui up --build
+  web:
+    build:
+      context: .
+      target: web_dev
+    container_name: iadevideosmark_web
+    profiles: ["ui"]
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE=http://localhost:8000
+    restart: unless-stopped
+
+  # Requested in your spec:
+  logging_service:
+    build:
+      context: .
+      target: logs
+    container_name: logs_viewer
+    profiles: ["logs"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./outputs:/app/outputs
     restart: unless-stopped
