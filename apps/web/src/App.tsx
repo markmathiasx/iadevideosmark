@@ -31,13 +31,17 @@ function pillClass(ok?: boolean, warn?: boolean) {
 
 export default function App() {
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [defaultProvider, setDefaultProvider] = useState<string>("mock");
   const [provider, setProvider] = useState<string>("mock");
   const [task, setTask] = useState<string>("text_to_video");
   const [prompt, setPrompt] = useState<string>("um cachorro correndo no parque, câmera baixa, luz do pôr do sol");
   const [duration, setDuration] = useState<number>(6);
   const [fps, setFps] = useState<number>(24);
-  const [width, setWidth] = useState<number>(768);
-  const [height, setHeight] = useState<number>(432);
+  const [width, setWidth] = useState<number>(1280);
+  const [height, setHeight] = useState<number>(720);
+  const [outputFormat, setOutputFormat] = useState<string>("jpeg");
+  const [jpegQuality, setJpegQuality] = useState<number>(95);
+  const [webpQuality, setWebpQuality] = useState<number>(90);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
@@ -51,6 +55,7 @@ export default function App() {
       try {
         const data = await fetchProviders();
         setProviders(data.providers || []);
+        setDefaultProvider(data.default_provider || "mock");
         setProvider(data.default_provider || "mock");
       } catch (e: any) {
         setError(e.message || String(e));
@@ -74,13 +79,33 @@ export default function App() {
 
   const canUseImage = task.startsWith("image_") || task === "image_to_video";
   const canUseVideo = task === "video_edit";
+  const isImageTask = task === "text_to_image" || task === "image_edit" || task === "image_upscale";
+  const isVideoTask = task === "text_to_video" || task === "image_to_video" || task === "video_edit";
+
+  // defaults por tipo de task (alta resolução por padrão)
+  useEffect(() => {
+    if (isImageTask) {
+      setWidth((w) => (w < 900 ? 1024 : w));
+      setHeight((h) => (h < 900 ? 1024 : h));
+      if (!outputFormat) setOutputFormat("jpeg");
+    } else if (isVideoTask) {
+      setWidth((w) => (w < 1100 ? 1280 : w));
+      setHeight((h) => (h < 700 ? 720 : h));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task]);
 
   async function submit() {
     setBusy(true);
     setError(null);
     setCurrentJob(null);
     try {
-      const params = { width, height, duration_s: duration, fps };
+      const params: any = { width, height, duration_s: duration, fps };
+      if (isImageTask) {
+        params.output_format = outputFormat;
+        params.jpeg_quality = jpegQuality;
+        params.webp_quality = webpQuality;
+      }
       const form = new FormData();
       form.set("provider", provider);
       form.set("task", task);
@@ -92,6 +117,7 @@ export default function App() {
       const created = await createJob(form);
       const id = created.id as string;
 
+      // poll
       let j: Job | null = null;
       for (let i = 0; i < 240; i++) {
         j = await fetchJob(id);
@@ -99,7 +125,9 @@ export default function App() {
         if (j.status === "succeeded" || j.status === "failed") break;
         await new Promise((r) => setTimeout(r, 1000));
       }
-      if (j && j.status === "failed") setError(j.error || "Falha no job");
+      if (j && j.status === "failed") {
+        setError(j.error || "Falha no job");
+      }
     } catch (e: any) {
       setError(e.message || String(e));
     } finally {
@@ -116,11 +144,17 @@ export default function App() {
       <div className="card">
         <div className="row" style={{ alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Resultado — {job.status}</div>
-            <div className="muted">provider: {job.provider} · task: {job.task} · id: {job.id}</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>
+              Resultado — {job.status}
+            </div>
+            <div className="muted">
+              provider: {job.provider} · task: {job.task} · id: {job.id}
+            </div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <span className={pillClass(job.status === "succeeded", job.status === "running")}>{job.status}</span>
+            <span className={pillClass(job.status === "succeeded", job.status === "running")}>
+              {job.status}
+            </span>
             <span className="pill">{job.meta?.mode || "n/a"}</span>
           </div>
         </div>
@@ -136,6 +170,15 @@ export default function App() {
           <div style={{ marginTop: 12 }}>
             <video className="media" controls src={`/outputs/${video}`} />
             <div className="muted">/outputs/{video}</div>
+            <a
+              className="muted"
+              href={`/outputs/${video}`}
+              download={`${job.task}_${job.id.slice(0, 8)}${video.includes(".") ? video.slice(video.lastIndexOf(".")) : ".mp4"}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Baixar arquivo
+            </a>
           </div>
         ) : null}
 
@@ -143,12 +186,23 @@ export default function App() {
           <div style={{ marginTop: 12 }}>
             <img className="media" src={`/outputs/${image}`} />
             <div className="muted">/outputs/{image}</div>
+            <a
+              className="muted"
+              href={`/outputs/${image}`}
+              download={`${job.task}_${job.id.slice(0, 8)}${image.includes(".") ? image.slice(image.lastIndexOf(".")) : ".jpg"}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Baixar arquivo
+            </a>
           </div>
         ) : null}
 
         {history ? (
           <div style={{ marginTop: 12 }}>
-            <a className="muted" href={`/outputs/${history}`} target="_blank">Abrir histórico ComfyUI (JSON)</a>
+            <a className="muted" href={`/outputs/${history}`} target="_blank">
+              Abrir histórico ComfyUI (JSON)
+            </a>
           </div>
         ) : null}
       </div>
@@ -184,21 +238,54 @@ export default function App() {
           <label>Provider</label>
           <select value={provider} onChange={(e) => setProvider(e.target.value)}>
             {providers.map((p) => (
-              <option key={p.id} value={p.id}>{p.name} ({p.id})</option>
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.id})
+              </option>
             ))}
           </select>
           <div className="muted">
-            {selectedProvider?.badges?.map((b) => <span key={b} className="pill">{b}</span>)}
+            {selectedProvider?.badges?.map((b) => (
+              <span key={b} className="pill">{b}</span>
+            ))}
           </div>
-          <div className="muted" style={{ marginTop: 6 }}>{selectedProvider?.notes}</div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            {selectedProvider?.notes}
+          </div>
 
           <label>Task</label>
           <select value={task} onChange={(e) => setTask(e.target.value)}>
-            {TASKS.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            {TASKS.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
           </select>
 
           <label>Prompt</label>
           <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+
+          {isImageTask ? (
+            <div className="row">
+              <div>
+                <label>Formato de saída</label>
+                <select value={outputFormat} onChange={(e) => setOutputFormat(e.target.value)}>
+                  <option value="jpeg">JPEG (recomendado)</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WEBP</option>
+                </select>
+              </div>
+              {outputFormat === "jpeg" ? (
+                <div>
+                  <label>Qualidade JPEG</label>
+                  <input type="number" value={jpegQuality} min={60} max={100} onChange={(e) => setJpegQuality(parseInt(e.target.value || "95", 10))} />
+                </div>
+              ) : null}
+              {outputFormat === "webp" ? (
+                <div>
+                  <label>Qualidade WEBP</label>
+                  <input type="number" value={webpQuality} min={50} max={100} onChange={(e) => setWebpQuality(parseInt(e.target.value || "90", 10))} />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="row">
             <div>
@@ -224,13 +311,27 @@ export default function App() {
 
           <label>Upload (opcional)</label>
           <div className="row">
-            <input type="file" accept="image/*" disabled={!canUseImage} onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-            <input type="file" accept="video/*" disabled={!canUseVideo} onChange={(e) => setVideoFile(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!canUseImage}
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+            <input
+              type="file"
+              accept="video/*"
+              disabled={!canUseVideo}
+              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+            />
           </div>
-          <div className="muted">Upload habilitado somente para tasks que aceitam imagem/vídeo.</div>
+          <div className="muted">
+            Upload habilitado somente para tasks que aceitam imagem/vídeo.
+          </div>
 
           <div style={{ marginTop: 12 }}>
-            <button onClick={submit} disabled={busy}>{busy ? "Gerando..." : "Gerar"}</button>
+            <button onClick={submit} disabled={busy}>
+              {busy ? "Gerando..." : "Gerar"}
+            </button>
           </div>
         </div>
 
@@ -251,20 +352,25 @@ export default function App() {
                   <div className="muted" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {j.task} · {j.provider} · {j.id.slice(0, 8)}
                   </div>
-                  <div><span className={pillClass(j.status === "succeeded", j.status === "failed")}>{j.status}</span></div>
+                  <div>
+                    <span className={pillClass(j.status === "succeeded", j.status === "failed")}>
+                      {j.status}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>
         <div style={{ fontSize: 14, fontWeight: 700 }}>Notas rápidas</div>
         <ul className="muted">
-          <li>Se estiver vendo vídeos curtos, ajuste a duração; no modo mock o default é 6s.</li>
-          <li>Se imagem falhar, veja a mensagem de erro e verifique se o provider suporta a task selecionada.</li>
-          <li>Para IA real (ComfyUI), crie os workflows em <code>config/comfyui_workflows</code>.</li>
+          <li>Se estiver vendo vídeos curtos (ex.: 3s), ajuste a duração; no modo mock o default é 6s.</li>
+          <li>Se imagem falhar, confira a mensagem de erro e se o provider suporta a task selecionada.</li>
+          <li>Para IA real (ComfyUI), configure workflows em <code>config/comfyui_workflows</code>.</li>
         </ul>
       </div>
     </div>
