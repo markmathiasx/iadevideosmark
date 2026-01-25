@@ -1,16 +1,21 @@
-﻿$root = "D:\minhaiateste\MinhaIALAST"
+$ErrorActionPreference = 'Stop'
+$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $root
 
 Write-Host "Running doctor..."
-& "D:\minhaiateste\MinhaIALAST\scripts\doctor.ps1"
+& (Join-Path $root "scripts\doctor.ps1")
 
 Write-Host "Creating venv..."
-if (-not (Test-Path "D:\minhaiateste\MinhaIALAST\apps\api\.venv")) {
-  python -m venv "D:\minhaiateste\MinhaIALAST\apps\api\.venv"
+$venv = Join-Path $root "apps\api\.venv"
+if (-not (Test-Path $venv)) {
+  python -m venv $venv
 }
 
 Write-Host "Installing backend deps..."
-& "D:\minhaiateste\MinhaIALAST\apps\api\.venv\Scripts\python.exe" -m pip install --upgrade pip
-& "D:\minhaiateste\MinhaIALAST\apps\api\.venv\Scripts\pip.exe" install -r "D:\minhaiateste\MinhaIALAST\apps\api\requirements.txt"
+$py  = Join-Path $venv "Scripts\python.exe"
+$pip = Join-Path $venv "Scripts\pip.exe"
+
+& $py -m pip install --upgrade pip
+& $pip install -r (Join-Path $root "apps\api\requirements.txt")
 
 Write-Host "Setup done."

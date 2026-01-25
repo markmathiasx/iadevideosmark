@@ -1,4 +1,5 @@
-﻿$root = "D:\minhaiateste\MinhaIALAST"
+$ErrorActionPreference = 'Stop'
+$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $root
 
 $api = "http://127.0.0.1:8000"
@@ -7,7 +8,7 @@ Write-Host "Validating API..."
 try {
   $h = Invoke-RestMethod -Method GET -Uri ($api + "/health") -TimeoutSec 10
 } catch {
-  Write-Host "FAIL: API not responding. Run scripts\dev.ps1 first."
+  Write-Host "FAIL: API not responding. Run scripts\dev.cmd first."
   exit 1
 }
 
