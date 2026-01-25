@@ -1,57 +1,142 @@
 {
-  "profiles": [
+  "groups": [
     {
-      "id": "shorts_builder",
-      "name": "Shorts Builder (base)"
+      "id": "video_gen",
+      "name": "Geração (MOCK)",
+      "profiles": [
+        {
+          "id": "mock_text_to_video",
+          "name": "Texto → Vídeo (MOCK)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_text_to_video"
+          ]
+        },
+        {
+          "id": "mock_image_to_video",
+          "name": "Imagem → Vídeo (MOCK)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_image_to_video"
+          ]
+        },
+        {
+          "id": "mock_text_to_image",
+          "name": "Texto → Imagem (MOCK)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "mock_text_to_image"
+          ]
+        }
+      ]
     },
     {
-      "id": "mock_text_to_video",
-      "name": "Texto → Vídeo (local)"
+      "id": "video_tools",
+      "name": "Editor (FFmpeg)",
+      "profiles": [
+        {
+          "id": "ff_trim",
+          "name": "Cortar (Trim)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_trim"
+          ]
+        },
+        {
+          "id": "ff_resize",
+          "name": "Redimensionar/Aspect",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_resize"
+          ]
+        },
+        {
+          "id": "ff_text",
+          "name": "Texto na tela",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_overlay_text"
+          ]
+        },
+        {
+          "id": "ff_music",
+          "name": "Adicionar música",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_add_music"
+          ]
+        },
+        {
+          "id": "ff_caption",
+          "name": "Queimar legenda (SRT)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_burn_srt"
+          ]
+        },
+        {
+          "id": "ff_concat",
+          "name": "Juntar vídeos (Concat)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_concat"
+          ]
+        },
+        {
+          "id": "ff_slideshow",
+          "name": "Slideshow de imagens",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_slideshow"
+          ]
+        },
+        {
+          "id": "ff_speed",
+          "name": "Velocidade (Speed)",
+          "badges": [
+            "offline"
+          ],
+          "modes": [
+            "ffmpeg_speed"
+          ]
+        }
+      ]
     },
     {
-      "id": "mock_image_to_video",
-      "name": "Imagem → Vídeo (local)"
-    },
-    {
-      "id": "mock_text_to_image",
-      "name": "Texto → Imagem (mock)"
-    },
-    {
-      "id": "ffmpeg_resize",
-      "name": "Redimensionar/Aspect"
-    },
-    {
-      "id": "ffmpeg_trim",
-      "name": "Cortar/Trim"
-    },
-    {
-      "id": "ffmpeg_concat",
-      "name": "Concatenar (vários vídeos)"
-    },
-    {
-      "id": "ffmpeg_merge_audio",
-      "name": "Mesclar Áudio"
-    },
-    {
-      "id": "ffmpeg_extract_audio",
-      "name": "Extrair Áudio"
-    },
-    {
-      "id": "ffmpeg_overlay_text",
-      "name": "Texto/Overlay"
-    },
-    {
-      "id": "ffmpeg_watermark",
-      "name": "Marca d'água"
-    },
-    {
-      "id": "ffmpeg_burn_subtitles",
-      "name": "Queimar Legendas (SRT/ASS)"
-    },
-    {
-      "id": "ffmpeg_fade",
-      "name": "Fade in/out"
+      "id": "library",
+      "name": "Biblioteca",
+      "profiles": [
+        {
+          "id": "assets_import",
+          "name": "Importar Assets (CDC/Commons)",
+          "badges": [
+            "licensed"
+          ],
+          "modes": [
+            "assets_import"
+          ]
+        }
+      ]
     }
-  ],
-  "note": "12+ modos locais via FFmpeg. Você pode mapear 'modes' para chamadas de APIs externas depois."
+  ]
 }

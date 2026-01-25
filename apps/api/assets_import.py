@@ -1,4 +1,4 @@
-import json, re, time, uuid
+import json, re, uuid, time
 from pathlib import Path
 from urllib.parse import urljoin, urlencode
 from urllib.request import Request, urlopen
@@ -22,8 +22,10 @@ def _download(url: str, dest: Path) -> None:
 def import_cdc_phil(pid: int) -> dict:
     page_url = f"https://phil.cdc.gov/Details.aspx?pid={pid}"
     html = _http_get(page_url).decode("utf-8", errors="ignore")
+
     patterns = [
         r'href="([^"]+)"[^>]*>\s*Click here for high resolution image',
+        r'href="([^"]+)"[^>]*>\s*Clique aqui para ver a imagem em alta resolução',
         r'href="([^"]+)"[^>]*>\s*Click here for high resolution',
         r'href="([^"]+)"[^>]*>\s*Clique aqui.*alta resolu',
     ]
@@ -33,18 +35,22 @@ def import_cdc_phil(pid: int) -> dict:
         if m:
             href = m.group(1)
             break
+
     if not href:
         m = re.search(r'href="([^"]+\.(?:jpg|jpeg|png))"', html, flags=re.IGNORECASE)
         if m:
             href = m.group(1)
+
     if not href:
-        raise RuntimeError("CDC PHIL: não consegui resolver o link automaticamente. Copie o link direto do arquivo na página PHIL.")
+        raise RuntimeError("Não consegui resolver o link de alta resolução automaticamente. Abra a página PHIL e copie o link de download direto do arquivo.")
+
     file_url = urljoin(page_url, href)
     ext = Path(file_url.split("?")[0]).suffix.lower() or ".jpg"
     asset_id = uuid.uuid4().hex
     filename = f"cdc_phil_{pid}_{asset_id}{ext}"
     dest = FILES_DIR / filename
     _download(file_url, dest)
+
     item = {
         "id": asset_id,
         "source": "cdc_phil",
@@ -56,7 +62,7 @@ def import_cdc_phil(pid: int) -> dict:
         "credit": "CDC / PHIL (ver ficha do asset)",
         "local_file": str(dest.relative_to(ROOT)).replace("\\", "/"),
         "created_at": _now_iso(),
-        "tags": ["cdc_phil"]
+        "tags": []
     }
     return add_item(item)
 
@@ -69,6 +75,7 @@ def _commons_api(params: dict) -> dict:
 def import_commons_category(category: str, limit: int = 30) -> dict:
     if not category.lower().startswith("category:"):
         category = "Category:" + category
+
     cm = _commons_api({
         "action": "query",
         "list": "categorymembers",
@@ -77,13 +84,16 @@ def import_commons_category(category: str, limit: int = 30) -> dict:
         "cmlimit": str(min(max(limit, 1), 200)),
         "format": "json"
     })
+
     members = (cm.get("query", {}).get("categorymembers", []) or [])
     imported = 0
     out_items = []
+
     for it in members:
         title = it.get("title")
         if not title or not title.lower().startswith("file:"):
             continue
+
         info = _commons_api({
             "action": "query",
             "prop": "imageinfo",
@@ -91,25 +101,30 @@ def import_commons_category(category: str, limit: int = 30) -> dict:
             "iiprop": "url|extmetadata",
             "format": "json"
         })
+
         pages = (info.get("query", {}).get("pages", {}) or {})
         page = next(iter(pages.values()), {})
         ii = (page.get("imageinfo", []) or [])
         if not ii:
             continue
+
         img = ii[0]
         file_url = img.get("url")
         meta = (img.get("extmetadata", {}) or {})
         if not file_url:
             continue
+
         ext = Path(file_url).suffix.lower() or ".jpg"
         asset_id = uuid.uuid4().hex
         filename = f"commons_{asset_id}{ext}"
         dest = FILES_DIR / filename
         _download(file_url, dest)
+
         lic_short = (meta.get("LicenseShortName", {}) or {}).get("value")
         lic_url = (meta.get("LicenseUrl", {}) or {}).get("value")
         artist = (meta.get("Artist", {}) or {}).get("value")
         credit = (meta.get("Credit", {}) or {}).get("value")
+
         item = {
             "id": asset_id,
             "source": "wikimedia_commons",
@@ -127,4 +142,5 @@ def import_commons_category(category: str, limit: int = 30) -> dict:
         add_item(item)
         out_items.append(item)
         imported += 1
+
     return {"category": category, "imported": imported, "items": out_items}

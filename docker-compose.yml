@@ -1,12 +1,12 @@
 services:
   api:
-    build: .
     container_name: minhaia_api
+    build: .
     ports:
       - "8000:8000"
     volumes:
-      - ./storage:/app/storage
       - ./outputs:/app/outputs
-    environment:
-      - PYTHONUNBUFFERED=1
+      - ./storage:/app/storage
+      - ./config:/app/config
+      - ./apps/web:/app/apps/web
     restart: unless-stopped

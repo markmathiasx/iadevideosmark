@@ -1,4 +1,4 @@
-import json, threading, time
+import json, time, threading
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -8,7 +8,7 @@ FILES_DIR = ASSETS_DIR / "files"
 MANIFEST = ASSETS_DIR / "manifest.json"
 _LOCK = threading.Lock()
 
-def _now_iso() -> str:
+def _now_iso():
     return time.strftime("%Y-%m-%dT%H:%M:%S")
 
 def load_manifest() -> Dict[str, Any]:
@@ -18,13 +18,12 @@ def load_manifest() -> Dict[str, Any]:
 
 def save_manifest(m: Dict[str, Any]) -> None:
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-    FILES_DIR.mkdir(parents=True, exist_ok=True)
     MANIFEST.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def add_item(item: Dict[str, Any]) -> Dict[str, Any]:
     with _LOCK:
         m = load_manifest()
-        items: List[Dict[str, Any]] = m.get("items", []) or []
+        items: List[Dict[str, Any]] = m.get("items", [])
         items.insert(0, item)
         m["items"] = items
         save_manifest(m)
