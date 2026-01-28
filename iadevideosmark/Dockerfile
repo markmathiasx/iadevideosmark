@@ -23,7 +23,7 @@ RUN pip install -r /app/apps/api/requirements.txt
 # App code
 COPY apps /app/apps
 COPY config /app/config
-COPY outputs /app/outputs
+RUN mkdir -p /app/outputs
 COPY scripts /app/scripts
 COPY docker-compose.yml /app/docker-compose.yml
 COPY Dockerfile /app/Dockerfile
@@ -48,3 +48,4 @@ CMD ["npm","run","dev","--","--host","0.0.0.0","--port","5173"]
 FROM api AS logs
 EXPOSE 8080
 CMD ["python","-m","apps.logging_service.main"]
+

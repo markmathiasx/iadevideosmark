@@ -1,0 +1,20 @@
+{
+  "profile_id": "assets_import",
+  "mode": "assets_import",
+  "prompt_or_script": "Faz ele com o iphone 17 pro max na mão ",
+  "inputs": [
+    "storage/uploads/0b4f9916333f4c819a4ded82189b6a00.jpg"
+  ],
+  "params": {
+    "duration": 3,
+    "fps": 24,
+    "aspect": "16:9",
+    "speed": 1.25
+  },
+  "id": "96344c527f174376b7d8ac1d33c7fbe0",
+  "status": "failed",
+  "progress": 1.0,
+  "created_at": "2026-01-28T04:12:43",
+  "updated_at": "2026-01-28T04:12:43",
+  "error": "Unknown mode: assets_import"
+}
